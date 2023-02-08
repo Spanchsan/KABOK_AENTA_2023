@@ -32,13 +32,16 @@ package org.firstinspires.ftc.teamcode.drive.opmode.main;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name="Main Test")
 public class MainTest extends LinearOpMode {
 
     Servo sExtend1, sExtend2, sUpDownClaw1, sUpDownClaw2, sRotateClaw, sClaw;
-    DcMotor m0, m1;
+    DcMotor motorLift0, motorLift1;
+    DcMotor motorFrontLeft, motorFrontRight, motorBackLeft, motorBackRight;
+    double inr = 0.7;
 
     @Override
     public void runOpMode() {
@@ -48,43 +51,77 @@ public class MainTest extends LinearOpMode {
         sUpDownClaw2 = hardwareMap.servo.get("serv3");
         sRotateClaw = hardwareMap.servo.get("serv4");
         sClaw = hardwareMap.servo.get("serv5");
-        m0 = hardwareMap.dcMotor.get("motor0");
-        m1 = hardwareMap.dcMotor.get("motor1");
+        motorLift0 = hardwareMap.dcMotor.get("motor0");
+        motorLift1 = hardwareMap.dcMotor.get("emotor1");
+        motorFrontLeft = hardwareMap.dcMotor.get("motor1");
+        motorFrontRight = hardwareMap.dcMotor.get("motor3");
+        motorBackLeft = hardwareMap.dcMotor.get("emotor2");
+        motorBackRight = hardwareMap.dcMotor.get("emotor3");
+        motorFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         sExtend1.scaleRange(0, 0.92);
         waitForStart();
         while (opModeIsActive()) {
-            if(gamepad1.right_bumper) {
+            double y = -gamepad1.right_stick_y; // Remember, this is reversed!
+            double y1 = -gamepad2.right_stick_y * 0.2;
+            double x = gamepad1.right_stick_x * 1.1; // Counteract imperfect strafing
+            double x1 = gamepad2.right_stick_x * 0.22;
+            double rx = gamepad1.left_stick_x;
+            double rx1 = gamepad2.left_stick_x * 0.2;
+            double denominator = Math.max(Math.abs(y) + Math.abs(y1) + Math.abs(x) + Math.abs(x1) + Math.abs(rx) + Math.abs(rx1), 1);
+            double frontLeftPower = (y + y1 + x + x1 + rx + rx1) / denominator;
+            double backLeftPower = (y + y1 - x - x1 + rx + rx1) / denominator;
+            double frontRightPower = (y  + y1 - x - x1 - rx - rx1) / denominator;
+            double backRightPower = (y + y1 + x + x1 - rx - rx1) / denominator;
+            if(frontLeftPower >= 0)
+                motorFrontLeft.setPower(inr * Math.sqrt(Math.abs(frontLeftPower)));
+            else
+                motorFrontLeft.setPower(-inr * Math.sqrt(Math.abs(frontLeftPower)));
+            if(backLeftPower >= 0)
+                motorBackLeft.setPower(inr * Math.sqrt(Math.abs(backLeftPower)));
+            else
+                motorBackLeft.setPower(-inr * Math.sqrt(Math.abs(backLeftPower)));
+            if(frontRightPower >= 0)
+                motorFrontRight.setPower(inr * Math.sqrt(Math.abs(frontRightPower)));
+            else
+                motorFrontRight.setPower(-inr * Math.sqrt(Math.abs(frontRightPower)));
+            if(backRightPower >= 0)
+                motorBackRight.setPower(inr * Math.sqrt(Math.abs(backRightPower)));
+            else
+                motorBackRight.setPower(-inr * Math.sqrt(Math.abs(backRightPower)));
+
+            if(gamepad2.right_bumper) {
                 sExtend1.setPosition(sExtend1.getPosition() + 0.003);
                 sExtend2.setPosition(sExtend2.getPosition() - 0.003);
-            } else if(gamepad1.left_bumper) {
+            } else if(gamepad2.left_bumper) {
                 sExtend1.setPosition(sExtend1.getPosition() - 0.003);
                 sExtend2.setPosition(sExtend2.getPosition() + 0.003);
             }
-            if(gamepad1.dpad_up){
+            if(gamepad2.dpad_up){
                 sUpDownClaw1.setPosition(sUpDownClaw1.getPosition() + 0.003);
                 sUpDownClaw2.setPosition(sUpDownClaw2.getPosition() + 0.003);
-            } else if(gamepad1.dpad_down){
+            } else if(gamepad2.dpad_down){
                 sUpDownClaw1.setPosition(sUpDownClaw1.getPosition() - 0.003);
                 sUpDownClaw2.setPosition(sUpDownClaw2.getPosition() - 0.003);
             }
-            if(gamepad1.b){
+            if(gamepad2.b){
                 sRotateClaw.setPosition(0);
-            } else if(gamepad1.x){
+            } else if(gamepad2.x){
                 sRotateClaw.setPosition(1);
             }
-            if(gamepad1.a){
+            if(gamepad2.a){
                 sClaw.setPosition(0);
-            } else if(gamepad1.y){
+            } else if(gamepad2.y){
                 sClaw.setPosition(0.5);
             }
-            if(gamepad1.dpad_left){
+            if(gamepad2.dpad_left){
                 sExtend1.setPosition(1);
                 sExtend2.setPosition(0);
-            } else if(gamepad1.dpad_right){
+            } else if(gamepad2.dpad_right){
                 sExtend1.setPosition(0);
                 sExtend2.setPosition(1);
             }
-            if(gamepad1.right_stick_button){
+            if(gamepad1.a){
                 IDLEIntakePosition();
                 GRABIntakePosition(0.79, 0);
                 PUTCONEIntakePosition();
@@ -96,8 +133,8 @@ public class MainTest extends LinearOpMode {
                 sleep(200);
                 setRotateClaw(0);
             }
-            m0.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
-            m1.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+            motorLift0.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+            motorLift1.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
             telemetry.addLine("Position Extend:" + sExtend1.getPosition());
             telemetry.addLine("Position Up/Down: " + sUpDownClaw1.getPosition());
             telemetry.update();
