@@ -59,7 +59,13 @@ public class MainTest extends LinearOpMode {
         motorBackRight = hardwareMap.dcMotor.get("emotor3");
         motorFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         motorBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        sExtend1.scaleRange(0, 0.92);
+
+        motorBackLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        //sExtend1.scaleRange(0, 0.965);
         waitForStart();
         while (opModeIsActive()) {
             double y = -gamepad1.right_stick_y; // Remember, this is reversed!
@@ -97,10 +103,10 @@ public class MainTest extends LinearOpMode {
                 sExtend1.setPosition(sExtend1.getPosition() - 0.003);
                 sExtend2.setPosition(sExtend2.getPosition() + 0.003);
             }
-            if(gamepad2.dpad_up){
+            if(gamepad2.dpad_down){
                 sUpDownClaw1.setPosition(sUpDownClaw1.getPosition() + 0.003);
                 sUpDownClaw2.setPosition(sUpDownClaw2.getPosition() + 0.003);
-            } else if(gamepad2.dpad_down){
+            } else if(gamepad2.dpad_up){
                 sUpDownClaw1.setPosition(sUpDownClaw1.getPosition() - 0.003);
                 sUpDownClaw2.setPosition(sUpDownClaw2.getPosition() - 0.003);
             }
@@ -121,17 +127,19 @@ public class MainTest extends LinearOpMode {
                 sExtend1.setPosition(0);
                 sExtend2.setPosition(1);
             }
+            if(gamepad2.right_stick_button){
+                PUTCONEIntakePosition();
+                IDLEIntakePosition();
+            }
             if(gamepad1.a){
                 IDLEIntakePosition();
-                GRABIntakePosition(0.79, 0);
-                PUTCONEIntakePosition();
-                GRABIntakePosition(0.83, 0);
-                PUTCONEIntakePosition();
                 GRABIntakePosition(0.87, 0);
                 PUTCONEIntakePosition();
-                setUpDownIntake(0.32);
-                sleep(200);
-                setRotateClaw(0);
+//                GRABIntakePosition(0.83, 0);
+//                PUTCONEIntakePosition();
+//                GRABIntakePosition(0.87, 0);
+//                PUTCONEIntakePosition();
+                IDLEIntakePosition();
             }
             motorLift0.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
             motorLift1.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
@@ -200,14 +208,15 @@ public class MainTest extends LinearOpMode {
      * @param positionExtend - position of the Extend to be Set when at grabbing state
      */
     private void GRABIntakePosition(double positionIntake, double positionExtend){
+            double overallTime = 1000 * (1 - positionExtend);
         setClaw(0.5);
         setExtendIntake(positionExtend);
         setUpDownIntake(0.5);
         sleep(100);
         setRotateClaw(0);
-        sleep(200);
+        sleep((long)(overallTime * 0.2));
         setUpDownIntake(positionIntake);
-        sleep(800);
+        sleep((long)(overallTime * 0.8));
         setClaw(0);
         sleep(300);
     }
