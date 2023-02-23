@@ -27,21 +27,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode.drive.opmode.main;
+package org.firstinspires.ftc.teamcode.drive.opmode.main.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.ServoImpl;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
+
+import org.firstinspires.ftc.ftccommon.external.SoundPlayingRobotMonitor;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.R;
+import org.firstinspires.ftc.teamcode.drive.opmode.IntakeConstants;
 
 @TeleOp(name="Main Test")
 public class MainTest extends LinearOpMode {
 
     Servo sExtend1, sExtend2, sUpDownClaw1, sUpDownClaw2, sRotateClaw, sClaw;
     DcMotor motorLift0, motorLift1;
-    DcMotor motorFrontLeft, motorFrontRight, motorBackLeft, motorBackRight;
-    double inr = 0.7;
+    DcMotorEx motorFrontLeft, motorFrontRight, motorBackLeft, motorBackRight;
+    double inr = 1800;
+    double stepServo = 0.015;
+    final double CLOSE_INTAKE = IntakeConstants.CLOSE_INTAKE,
+            OPEN_INTAKE = IntakeConstants.OPEN_INTAKE,
+            LOWEST_CONE_INTAKE = IntakeConstants.LOWEST_CONE_INTAKE,
+            IDLE_INTAKE_POS = IntakeConstants.IDLE_INTAKE_POS;
+    Thread threadFULLExtend = new Thread(() -> {
+        IDLEIntakePosition();
+        GRABIntakePosition(LOWEST_CONE_INTAKE, 0);
+        PUTCONEIntakePosition();
+        IDLEIntakePosition();
+    });
+    Thread threadPUTCONE = new Thread(() -> {
+        sClaw.setPosition(CLOSE_INTAKE);
+        sleep(450);
+        PUTCONEIntakePosition();
+        IDLEIntakePosition();
+    });
 
     @Override
     public void runOpMode() {
@@ -53,19 +81,26 @@ public class MainTest extends LinearOpMode {
         sClaw = hardwareMap.servo.get("serv5");
         motorLift0 = hardwareMap.dcMotor.get("motor0");
         motorLift1 = hardwareMap.dcMotor.get("emotor1");
-        motorFrontLeft = hardwareMap.dcMotor.get("motor1");
-        motorFrontRight = hardwareMap.dcMotor.get("motor3");
-        motorBackLeft = hardwareMap.dcMotor.get("emotor2");
-        motorBackRight = hardwareMap.dcMotor.get("emotor3");
-        motorFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorFrontLeft = hardwareMap.get(DcMotorEx.class, "motor1");//motor1
+        motorFrontRight = hardwareMap.get(DcMotorEx.class, "motor3");
+        motorBackLeft = hardwareMap.get(DcMotorEx.class, "emotor2");
+        motorBackRight = hardwareMap.get(DcMotorEx.class, "emotor3");
+        motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        motorBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorFrontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorFrontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         motorBackLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        //sExtend1.scaleRange(0, 0.965);
+        motorLift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        IDLEIntakePosition();
         waitForStart();
         while (opModeIsActive()) {
             double y = -gamepad1.right_stick_y; // Remember, this is reversed!
@@ -80,45 +115,64 @@ public class MainTest extends LinearOpMode {
             double frontRightPower = (y  + y1 - x - x1 - rx - rx1) / denominator;
             double backRightPower = (y + y1 + x + x1 - rx - rx1) / denominator;
             if(frontLeftPower >= 0)
-                motorFrontLeft.setPower(inr * Math.sqrt(Math.abs(frontLeftPower)));
+                motorFrontLeft.setVelocity(inr * Math.sqrt(Math.abs(frontLeftPower)));
             else
-                motorFrontLeft.setPower(-inr * Math.sqrt(Math.abs(frontLeftPower)));
+                motorFrontLeft.setVelocity(-inr * Math.sqrt(Math.abs(frontLeftPower)));
             if(backLeftPower >= 0)
-                motorBackLeft.setPower(inr * Math.sqrt(Math.abs(backLeftPower)));
+                motorBackLeft.setVelocity(inr * Math.sqrt(Math.abs(backLeftPower)));
             else
-                motorBackLeft.setPower(-inr * Math.sqrt(Math.abs(backLeftPower)));
+                motorBackLeft.setVelocity(-inr * Math.sqrt(Math.abs(backLeftPower)));
             if(frontRightPower >= 0)
-                motorFrontRight.setPower(inr * Math.sqrt(Math.abs(frontRightPower)));
+                motorFrontRight.setVelocity(inr * Math.sqrt(Math.abs(frontRightPower)));
             else
-                motorFrontRight.setPower(-inr * Math.sqrt(Math.abs(frontRightPower)));
+                motorFrontRight.setVelocity(-inr * Math.sqrt(Math.abs(frontRightPower)));
             if(backRightPower >= 0)
-                motorBackRight.setPower(inr * Math.sqrt(Math.abs(backRightPower)));
+                motorBackRight.setVelocity(inr * Math.sqrt(Math.abs(backRightPower)));
             else
-                motorBackRight.setPower(-inr * Math.sqrt(Math.abs(backRightPower)));
+                motorBackRight.setVelocity(-inr * Math.sqrt(Math.abs(backRightPower)));
 
-            if(gamepad2.right_bumper) {
-                sExtend1.setPosition(sExtend1.getPosition() + 0.003);
-                sExtend2.setPosition(sExtend2.getPosition() - 0.003);
-            } else if(gamepad2.left_bumper) {
-                sExtend1.setPosition(sExtend1.getPosition() - 0.003);
-                sExtend2.setPosition(sExtend2.getPosition() + 0.003);
+//            if(gamepad2.left_trigger > 0.7) {
+//                sExtend1.setPosition(sExtend1.getPosition() + stepServo);
+//                sExtend2.setPosition(sExtend2.getPosition() - stepServo);
+//            } else if(gamepad2.left_trigger > 0.3){
+//                sExtend1.setPosition(sExtend1.getPosition() + stepServo * 0.5);
+//                sExtend2.setPosition(sExtend2.getPosition() - stepServo * 0.5);
+//            } else if(gamepad2.right_trigger > 0.7) {
+//                sExtend1.setPosition(sExtend1.getPosition() - stepServo);
+//                sExtend2.setPosition(sExtend2.getPosition() + stepServo);
+//            } else if(gamepad2.right_trigger > 0.3){
+//                sExtend1.setPosition(sExtend1.getPosition() - stepServo * 0.5);
+//                sExtend2.setPosition(sExtend2.getPosition() + stepServo * 0.5);
+//            }
+            if(gamepad2.left_trigger > 0) {
+                sExtend1.setPosition(sExtend1.getPosition() + stepServo * Math.max(0.3, gamepad2.left_trigger));
+                sExtend2.setPosition(sExtend2.getPosition() - stepServo * Math.max(0.3, gamepad2.left_trigger));
+            } else if(gamepad2.right_trigger > 0) {
+                sExtend1.setPosition(sExtend1.getPosition() - stepServo * Math.max(0.3, gamepad2.right_trigger));
+                sExtend2.setPosition(sExtend2.getPosition() + stepServo * Math.max(0.3, gamepad2.right_trigger));
+            }
+            if(gamepad2.right_bumper){
+                sUpDownClaw1.setPosition(sUpDownClaw1.getPosition() + stepServo);
+                sUpDownClaw2.setPosition(sUpDownClaw2.getPosition() + stepServo);
+            } else if(gamepad2.left_bumper){
+                sUpDownClaw1.setPosition(sUpDownClaw1.getPosition() - stepServo);
+                sUpDownClaw2.setPosition(sUpDownClaw2.getPosition() - stepServo);
             }
             if(gamepad2.dpad_down){
-                sUpDownClaw1.setPosition(sUpDownClaw1.getPosition() + 0.003);
-                sUpDownClaw2.setPosition(sUpDownClaw2.getPosition() + 0.003);
+                setUpDownIntake(LOWEST_CONE_INTAKE);
             } else if(gamepad2.dpad_up){
-                sUpDownClaw1.setPosition(sUpDownClaw1.getPosition() - 0.003);
-                sUpDownClaw2.setPosition(sUpDownClaw2.getPosition() - 0.003);
+                setUpDownIntake(0.5);
             }
+
             if(gamepad2.b){
                 sRotateClaw.setPosition(0);
             } else if(gamepad2.x){
                 sRotateClaw.setPosition(1);
             }
             if(gamepad2.a){
-                sClaw.setPosition(0);
+                sClaw.setPosition(CLOSE_INTAKE);
             } else if(gamepad2.y){
-                sClaw.setPosition(0.5);
+                sClaw.setPosition(OPEN_INTAKE);
             }
             if(gamepad2.dpad_left){
                 sExtend1.setPosition(1);
@@ -128,23 +182,22 @@ public class MainTest extends LinearOpMode {
                 sExtend2.setPosition(1);
             }
             if(gamepad2.right_stick_button){
-                PUTCONEIntakePosition();
-                IDLEIntakePosition();
+                if(!threadPUTCONE.isAlive())
+                    threadPUTCONE.start();
             }
             if(gamepad1.a){
-                IDLEIntakePosition();
-                GRABIntakePosition(0.87, 0);
-                PUTCONEIntakePosition();
-//                GRABIntakePosition(0.83, 0);
-//                PUTCONEIntakePosition();
-//                GRABIntakePosition(0.87, 0);
-//                PUTCONEIntakePosition();
-                IDLEIntakePosition();
+                if(!threadFULLExtend.isAlive())
+                    threadFULLExtend.start();
             }
             motorLift0.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
             motorLift1.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
             telemetry.addLine("Position Extend:" + sExtend1.getPosition());
             telemetry.addLine("Position Up/Down: " + sUpDownClaw1.getPosition());
+            telemetry.addLine("front left: " + motorFrontLeft.getVelocity());
+            telemetry.addLine("front right: " + motorFrontRight.getVelocity());
+            telemetry.addLine("back left: " + motorBackLeft.getVelocity());
+            telemetry.addLine("back right: " + motorBackRight.getVelocity());
+            telemetry.addLine("Lift: " + motorLift1.getCurrentPosition());
             telemetry.update();
         }
     }
@@ -168,7 +221,7 @@ public class MainTest extends LinearOpMode {
      *                 position: 0.75 - 4th highest cone
      *                 position: 0.79 - 3th highest cone
      *                 position: 0.85 - 2th highest cone
-     *                 position: 0.87 - 1th highest cone(GROUND)
+     *                 position: 0.92 - 1th highest cone(GROUND)
      */
     protected void setUpDownIntake(double position){
         sUpDownClaw1.setPosition(position);
@@ -187,7 +240,7 @@ public class MainTest extends LinearOpMode {
     /**
      * @param position - position of the Claw
      *                 Position: 0 - hold the cone
-     *                 Position: 0.5 - release the cone
+     *                 Position: 0.7 - release the cone
      */
     protected void setClaw(double position){
         sClaw.setPosition(position);
@@ -198,9 +251,9 @@ public class MainTest extends LinearOpMode {
      */
     private void IDLEIntakePosition(){
         setExtendIntake(1);
-        setUpDownIntake(0.35);
+        setUpDownIntake(IDLE_INTAKE_POS);
         setRotateClaw(0);
-        sleep(300);
+        //sleep(300);
     }
 
     /**
@@ -208,16 +261,16 @@ public class MainTest extends LinearOpMode {
      * @param positionExtend - position of the Extend to be Set when at grabbing state
      */
     private void GRABIntakePosition(double positionIntake, double positionExtend){
-            double overallTime = 1000 * (1 - positionExtend);
-        setClaw(0.5);
+        double overallTime = 750 * (1 - positionExtend);
+        setClaw(OPEN_INTAKE);
         setExtendIntake(positionExtend);
         setUpDownIntake(0.5);
         sleep(100);
         setRotateClaw(0);
-        sleep((long)(overallTime * 0.2));
+        sleep((long) (overallTime * 0.2));
         setUpDownIntake(positionIntake);
-        sleep((long)(overallTime * 0.8));
-        setClaw(0);
+        sleep((long) (overallTime * 0.8));
+        setClaw(CLOSE_INTAKE);
         sleep(300);
     }
 
@@ -227,14 +280,15 @@ public class MainTest extends LinearOpMode {
      *                    Extend Intake - 1
      */
     private void PUTCONEIntakePosition(){
+        double overallTime = Math.max(800, 1000 * (1 - sExtend1.getPosition()));
         setUpDownIntake(0.6);
         sleep(100);
         setExtendIntake(1);
         setRotateClaw(1);
-        sleep(700);
+        sleep((long) (overallTime * 0.6));
         setUpDownIntake(0.27);
-        sleep(400);
-        setClaw(0.5);
+        sleep((long) (overallTime * 0.4));
+        setClaw(OPEN_INTAKE);
         sleep(500);
     }
 }
