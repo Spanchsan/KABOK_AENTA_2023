@@ -57,7 +57,8 @@ public class MainTest extends LinearOpMode {
     final double CLOSE_INTAKE = IntakeConstants.CLOSE_INTAKE,
             OPEN_INTAKE = IntakeConstants.OPEN_INTAKE,
             LOWEST_CONE_INTAKE = IntakeConstants.LOWEST_CONE_INTAKE,
-            IDLE_INTAKE_POS = IntakeConstants.IDLE_INTAKE_POS;
+            IDLE_INTAKE_POS = IntakeConstants.IDLE_INTAKE_POS,
+            PUTCONE_INTAKE_POS = IntakeConstants.PUT_CONE_INTAKE_POS;
     Thread threadFULLExtend = new Thread(() -> {
         IDLEIntakePosition();
         GRABIntakePosition(LOWEST_CONE_INTAKE, 0);
@@ -69,6 +70,11 @@ public class MainTest extends LinearOpMode {
         sleep(450);
         PUTCONEIntakePosition();
         IDLEIntakePosition();
+    });
+    Thread threadUPCONE = new Thread(() -> {
+        sClaw.setPosition(CLOSE_INTAKE);
+        sleep(450);
+        setUpDownIntake(IDLE_INTAKE_POS);
     });
 
     @Override
@@ -98,8 +104,8 @@ public class MainTest extends LinearOpMode {
         motorFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        motorLift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorLift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //motorLift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //motorLift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         IDLEIntakePosition();
         waitForStart();
         while (opModeIsActive()) {
@@ -184,6 +190,10 @@ public class MainTest extends LinearOpMode {
             if(gamepad2.right_stick_button){
                 if(!threadPUTCONE.isAlive())
                     threadPUTCONE.start();
+            }
+            if(gamepad2.left_stick_button){
+                if(!threadUPCONE.isAlive())
+                    threadUPCONE.start();
             }
             if(gamepad1.a){
                 if(!threadFULLExtend.isAlive())
@@ -286,7 +296,7 @@ public class MainTest extends LinearOpMode {
         setExtendIntake(1);
         setRotateClaw(1);
         sleep((long) (overallTime * 0.6));
-        setUpDownIntake(0.27);
+        setUpDownIntake(PUTCONE_INTAKE_POS);
         sleep((long) (overallTime * 0.4));
         setClaw(OPEN_INTAKE);
         sleep(500);

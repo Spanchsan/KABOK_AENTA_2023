@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.util.TagDetector;
  */
 @Config
 @Autonomous(group = "drive")
-public class AutoLeftSide extends LinearOpMode {
+public class AutoRightSide extends LinearOpMode {
 
     private VoltageSensor batteryVoltageSensor;
     private TagDetector detector;
@@ -34,15 +34,19 @@ public class AutoLeftSide extends LinearOpMode {
         TagDetector.Tag currTag = TagDetector.Tag.noTag;
 
         batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
-        drive.setPoseEstimate(new Pose2d(-37, -60, Math.toRadians(90)));
-        Trajectory traj1= drive.trajectoryBuilder(new Pose2d(-37, -60, Math.toRadians(90)))
-                .splineTo(new Vector2d(-37, -17), Math.toRadians(90))
+        drive.setPoseEstimate(new Pose2d(37, -60, Math.toRadians(90)));
+        Trajectory traj1= drive.trajectoryBuilder(new Pose2d(37, -60, Math.toRadians(90)))
+                .splineTo(new Vector2d(37, -17), Math.toRadians(90))
                 //.splineTo(new Vector2d(-37.2, -5.5), Math.toRadians(19))
                 .build();
         drive.IDLEIntakePosition();
         Trajectory traj2 = drive.trajectoryBuilder(traj1.end())
-                .lineToLinearHeading(new Pose2d(-37.7, -3.9, Math.toRadians(14)))
+                .lineToLinearHeading(new Pose2d(39.4, -2.5, Math.toRadians(160)))
                 .build();
+        Trajectory traj21 = drive.trajectoryBuilder(traj2.end())
+                .back(1)
+                .build();
+
         //3.5
         while (!isStopRequested() && !isStarted()){
             TagDetector.Tag tag = detector.getTag();
@@ -56,12 +60,12 @@ public class AutoLeftSide extends LinearOpMode {
 
         if (isStopRequested()) return;
 
-        //drive.throwCone(1, 5, 0, telemetry, arg -> isStopRequested());
         drive.followTrajectory(traj1);
         drive.followTrajectory(traj2);
+        drive.followTrajectory(traj21);
         double powr = 1;
-        double tim = 0.925;
-        double extd = 0.285;
+        double tim = 1.25;
+        double extd = 0;
         drive.waitForIdle();
         // 1st
         drive.throwCone2_1(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
@@ -77,48 +81,55 @@ public class AutoLeftSide extends LinearOpMode {
         while(threadTemp.isAlive());
         //3rd
         drive.throwCone2_1(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
-        threadTemp = new Thread(() -> drive.EXTEND_GRAB_PUTCONEIntakePosition1(0.86, extd));
+        threadTemp = new Thread(() -> drive.EXTEND_GRAB_PUTCONEIntakePosition1(0.83, extd));
         threadTemp.start();
         drive.throwCone2_2(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
         while(threadTemp.isAlive());
         //4th
         drive.throwCone2_1(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
-        threadTemp = new Thread(() -> drive.EXTEND_GRAB_PUTCONEIntakePosition1(0.89, extd+0.1));
+        threadTemp = new Thread(() -> drive.EXTEND_GRAB_PUTCONEIntakePosition1(0.87, extd+0.1));
         threadTemp.start();
         drive.throwCone2_2(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
         while(threadTemp.isAlive());
         //5th
         drive.throwCone2_1(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
-        threadTemp = new Thread(() -> drive.EXTEND_GRAB_PUTCONEIntakePosition1(0.92, extd+0.35));
+        threadTemp = new Thread(() -> drive.EXTEND_GRAB_PUTCONEIntakePosition12(0.91, extd+0.2));
         threadTemp.start();
         drive.throwCone2_2(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
         while(threadTemp.isAlive());
         //6th
         drive.throwCone1(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
-        if(currTag == TagDetector.Tag.left){
-            Trajectory traj3 = drive.trajectoryBuilder(traj2.end())
-                    .lineToLinearHeading(new Pose2d(-37, -13, Math.toRadians(180)))
+        if(currTag == TagDetector.Tag.right){
+            Trajectory traj3 = drive.trajectoryBuilder(traj21.end())
+                    .lineToLinearHeading(new Pose2d(37, -13, Math.toRadians(0)))
                     .build();
             Trajectory traj4 = drive.trajectoryBuilder(traj3.end())
-                    .splineTo(new Vector2d(-61, -13), Math.toRadians(180))
+                    .splineTo(new Vector2d(61, -13), Math.toRadians(0))
                     .build();
             drive.followTrajectory(traj3);
             drive.followTrajectory(traj4);
         } else if(currTag == TagDetector.Tag.mid){
-            Trajectory traj3 = drive.trajectoryBuilder(traj2.end())
-                    .splineTo(new Vector2d(-37, -14), Math.toRadians(0))
+            Trajectory traj3 = drive.trajectoryBuilder(traj21.end())
+                    .splineTo(new Vector2d(37, -14), Math.toRadians(180-1e6))
                     .build();
             drive.followTrajectory(traj3);
         } else {
-            Trajectory traj3 = drive.trajectoryBuilder(traj2.end())
-                    .lineToLinearHeading(new Pose2d(-36, -14, Math.toRadians(0)))
+            Trajectory traj3 = drive.trajectoryBuilder(traj21.end())
+                    .lineToLinearHeading(new Pose2d(36, -14, Math.toRadians(180)))
                     .build();
             Trajectory traj4 = drive.trajectoryBuilder(traj3.end())
-                    .splineTo(new Vector2d(-13.2, -14), Math.toRadians(0))
+                    .splineTo(new Vector2d(13.2, -14), Math.toRadians(180))
                     .build();
             drive.followTrajectory(traj3);
             drive.followTrajectory(traj4);
         }
+        /*
+        drive.throwCone2_1(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
+        new Thread(() -> drive.EXTENDIntakePosition(0.79, extd)).start();
+        drive.throwCone2_2(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
+        new Thread(() -> drive.GRAB_PUTCONEIntakePosition1());
+        */
+
         Pose2d poseEstimate = drive.getPoseEstimate();
         telemetry.addData("finalX", poseEstimate.getX());
         telemetry.addData("finalY", poseEstimate.getY());

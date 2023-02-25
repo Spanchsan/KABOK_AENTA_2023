@@ -46,7 +46,7 @@ public class TagDetector {
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
             public void onOpened() {
-                camera.startStreaming(800, 448, OpenCvCameraRotation.UPRIGHT);
+                camera.startStreaming(864, 480, OpenCvCameraRotation.SIDEWAYS_LEFT);
             }
 
             @Override
@@ -63,22 +63,17 @@ public class TagDetector {
         ArrayList<AprilTagDetection> currentDetections = aprilTagDetectionPipeline.getLatestDetections();
 
         if (currentDetections.size() != 0) {
-            boolean tagFound = false;
-
             for (AprilTagDetection tag : currentDetections) {
                 if (tag.id == LEFT_ID) {
                     tagOfInterest = tag;
-                    tagFound = true;
                     foundTag = Tag.left;
                     break;
                 } else if (tag.id == MID_ID) {
                     tagOfInterest = tag;
-                    tagFound = true;
                     foundTag = Tag.mid;
                     break;
                 } else if (tag.id == RIGHT_ID) {
                     tagOfInterest = tag;
-                    tagFound = true;
                     foundTag = Tag.right;
                     break;
                 }

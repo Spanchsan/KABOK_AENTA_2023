@@ -123,7 +123,7 @@ public class SampleMecanumDrive extends MecanumDrive {
         sClaw = hardwareMap.servo.get("serv5");
         motorLift0 = hardwareMap.get(DcMotorEx.class, "motor0");
         motorLift1 = hardwareMap.get(DcMotorEx.class, "emotor1");
-        motorLift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //motorLift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorLift0.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorLift1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         // motorLift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -376,7 +376,7 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     public void IDLEIntakePosition1(){
         setUpDownIntake(IDLE_INTAKE_POS);
-        sleep(150);
+        sleep(100);
         setRotateClaw(0);
     }
 
@@ -385,7 +385,7 @@ public class SampleMecanumDrive extends MecanumDrive {
      * @param positionExtend - position of the Extend to be Set when at grabbing state
      */
     public void GRABIntakePosition(double positionIntake, double positionExtend){
-        double overallTime = 950 * (1 - positionExtend);
+        double overallTime = 750 * (1 - positionExtend);
         setClaw(OPEN_INTAKE);
         setExtendIntake(positionExtend);
         setUpDownIntake(0.5);
@@ -395,7 +395,7 @@ public class SampleMecanumDrive extends MecanumDrive {
         setUpDownIntake(positionIntake);
         sleep((long) (overallTime * 0.8));
         setClaw(CLOSE_INTAKE);
-        sleep(650);
+        sleep(450);
     }
 
     /**
@@ -406,14 +406,65 @@ public class SampleMecanumDrive extends MecanumDrive {
     public void PUTCONEIntakePosition1(){
         double overallTime = Math.max(800, 1000 * (1 - sExtend1.getPosition()));
         setUpDownIntake(0.45);
-        sleep(700);
+        sleep(650);
         setExtendIntake(1);
         setRotateClaw(1);
         sleep((long) (overallTime * 0.6));
         setUpDownIntake(0.27);
         sleep((long) (overallTime * 0.4));
         setClaw(OPEN_INTAKE);
+        sleep(200);
+    }
+
+    public void EXTENDIntakePosition(double positionIntake, double positionExtend){
+        double overallTime = 750 * (1 - positionExtend);
+        setClaw(OPEN_INTAKE);
+        setExtendIntake(positionExtend);
+        setUpDownIntake(0.5);
+        sleep(100);
+        setRotateClaw(0);
+        sleep((long) (overallTime * 0.2));
+        setUpDownIntake(positionIntake);
+        sleep((long) (overallTime * 0.8));
+    }
+
+    public void EXTENDIntakePosition1(double positionIntake, double positionExtend){
+        double overallTime = 750 * (1 - positionExtend);
+        setClaw(OPEN_INTAKE);
+        setUpDownIntake(0.7);
+        sleep(400);
+        setExtendIntake(positionExtend);
+        sleep(100);
+        setRotateClaw(0);
+        sleep((long) (overallTime * 0.2));
+        setUpDownIntake(positionIntake);
+        sleep((long) (overallTime * 0.8));
+    }
+
+    public void GRAB_PUTCONEIntakePosition1(){
+        double overallTime = Math.max(800, 940 * (1 - sExtend1.getPosition()));
+        setClaw(CLOSE_INTAKE);
+        sleep(450);
+        setUpDownIntake(0.45);
         sleep(500);
+        setExtendIntake(1);
+        setRotateClaw(1);
+        sleep((long) (overallTime * 0.6));
+        setUpDownIntake(0.27);
+        sleep((long) (overallTime * 0.4));
+        setClaw(OPEN_INTAKE);
+        sleep(200);
+        IDLEIntakePosition1();
+    }
+
+    public void EXTEND_GRAB_PUTCONEIntakePosition1(double positionIntake, double positionExtend){
+        EXTENDIntakePosition(positionIntake, positionExtend);
+        GRAB_PUTCONEIntakePosition1();
+    }
+
+    public void EXTEND_GRAB_PUTCONEIntakePosition12(double positionIntake, double positionExtend){
+        EXTENDIntakePosition1(positionIntake, positionExtend);
+        GRAB_PUTCONEIntakePosition1();
     }
 
     public void sleep(long milliseconds){
@@ -479,7 +530,7 @@ public class SampleMecanumDrive extends MecanumDrive {
     public void throwCone1(double power, double seconds, Telemetry telemetry){
         ElapsedTime runtime = new ElapsedTime();
         runtime.reset();
-        long idleT = 300;
+        long idleT = 100;
         motorLift1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motorLift1.setPower(power);
         motorLift0.setPower(power);
@@ -494,7 +545,45 @@ public class SampleMecanumDrive extends MecanumDrive {
         runtime.reset();
         motorLift1.setPower(-power);
         motorLift0.setPower(-power);
-        while(runtime.seconds() <= seconds * 1.5) {
+        while(runtime.seconds() <= seconds * 1.25) {
+            telemetry.addLine("" + motorLift1.getCurrentPosition());
+            telemetry.addLine("Motor1: " + motorLift1.getPower() + " Motor0: " + motorLift0.getPower());
+            telemetry.update();
+        }
+        motorLift1.setPower(0);
+        motorLift0.setPower(0);
+    }
+
+    public void throwCone2_1(double power, double seconds, Telemetry telemetry){
+        ElapsedTime runtime = new ElapsedTime();
+        runtime.reset();
+        motorLift1.setPower(power);
+        motorLift0.setPower(power);
+        while(runtime.seconds() <= seconds * 0.85) {
+            telemetry.addLine("" + motorLift1.getCurrentPosition());
+            telemetry.addLine("Motor1: " + motorLift1.getPower() + " Motor0: " + motorLift0.getPower());
+            telemetry.update();
+        }
+//        motorLift1.setPower(0);
+//        motorLift0.setPower(0);
+    }
+
+    public void throwCone2_2(double power, double seconds, Telemetry telemetry){
+        ElapsedTime runtime = new ElapsedTime();
+        runtime.reset();
+        motorLift1.setPower(power);
+        motorLift0.setPower(power);
+        while(runtime.seconds() <= seconds * 0.15) {
+            telemetry.addLine("" + motorLift1.getCurrentPosition());
+            telemetry.addLine("Motor1: " + motorLift1.getPower() + " Motor0: " + motorLift0.getPower());
+            telemetry.update();
+        }
+        motorLift1.setPower(0);
+        motorLift0.setPower(0);
+        runtime.reset();
+        motorLift1.setPower(-power);
+        motorLift0.setPower(-power);
+        while(runtime.seconds() <= seconds) {
             telemetry.addLine("" + motorLift1.getCurrentPosition());
             telemetry.addLine("Motor1: " + motorLift1.getPower() + " Motor0: " + motorLift0.getPower());
             telemetry.update();
