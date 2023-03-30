@@ -6,12 +6,25 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.drive.opmode.IntakeConstants;
 
-@TeleOp(name="BochonAga")
+
+@TeleOp(name="BochonAgaSuper")
 
 public class MainAENTA extends LinearOpMode {
     DcMotor motorFL, motorBL, motorFR, motorBR, liftL, motorLiftL, motorLiftR;
     Servo servoLiftR, servoLiftL, servoKrutilka, claw;
+    final double CLOSE_INTAKE = IntakeConstants.CLOSE_INTAKE,
+            OPEN_INTAKE = IntakeConstants.OPEN_INTAKE,
+        rotateGrab = IntakeConstants.ROTATE_GRAB,
+        rotatePerevorot = IntakeConstants.ROTATE_PEREVOROT,
+        liftGrab = IntakeConstants.LIFT_GRAB,
+        liftPerevorot = IntakeConstants.LIFT_PEREVOROT,
+        //қолдың позициясы конусты салудың алдында
+        liftIDlE = IntakeConstants.LIFT_IDLE;
+    Thread threadUP = new Thread(this::intakeUP),
+            threadDOWN = new Thread(this::intakeDOWN);
+
     @Override
     public void runOpMode() throws InterruptedException {
         motorFL = hardwareMap.dcMotor.get("leftF");
@@ -48,7 +61,7 @@ public class MainAENTA extends LinearOpMode {
             while (opModeIsActive()){
                 double y = -gamepad1.left_stick_y; // Remember, this is reversed!
                 double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
-                double rx = gamepad1.right_stick_x;
+                double rx = gamepad1.right_stick_x * 0.8;
                 double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
                 double frontLeftPower = (y + x + rx) / denominator;
                 double backLeftPower = (y - x + rx) / denominator;
@@ -66,10 +79,10 @@ public class MainAENTA extends LinearOpMode {
                 telemetry.addLine(String.valueOf(backRightPower));
                 telemetry.update();
 
-                if(gamepad1.dpad_up){
+                if(gamepad2.dpad_up){
                     motorLiftL.setPower(1);
                     motorLiftR.setPower(1);
-                } else if(gamepad1.dpad_down){
+                } else if(gamepad2.dpad_down){
                     motorLiftL.setPower(-1);
                     motorLiftR.setPower(-1);
                 }
@@ -82,27 +95,91 @@ public class MainAENTA extends LinearOpMode {
                     motorLiftR.setPower(0);
                 }
 
-                if (gamepad1.right_trigger > 0.3) {
-                    servoLiftR.setPosition(1);
-                    servoLiftL.setPosition(1);
-                } else if(gamepad1.left_trigger > 0.3) {
-                    servoLiftR.setPosition(0.1);
-                    servoLiftL.setPosition(0.1);
+                if (gamepad2.right_trigger > 0.3) {
+                    //1
+                    //PEREVOROT
+                    setServPosLift(liftPerevorot);
+                } else if(gamepad2.left_trigger > 0.3) {
+                    //0.1
+                    //GRAB
+                    setServPosLift(liftGrab);
                 }
-                if(gamepad1.x){
-                    servoKrutilka.setPosition(0.86);
+                /*if(gamepad1.x){
+                    //PEREVOROT
+                    servoKrutilka.setPosition(rotatePerevorot);
                 }else if(gamepad1.y){
-                    servoKrutilka.setPosition(0.2);
+                    //VNIZ
+                    servoKrutilka.setPosition(rotateGrab);
+                }*/
+                if(gamepad2.a){
+                    if(!threadUP.isAlive())
+                        threadUP.start();
+                } else if(gamepad2.b){
+                    if(!threadDOWN.isAlive())
+                        threadDOWN.start();
                 }
-                if(gamepad1.left_bumper){
-                    claw.setPosition(0.625);
-                }else if(gamepad1.right_bumper){
-                    claw.setPosition(1);
+                if(gamepad2.left_bumper || gamepad1.left_bumper){
+                    claw.setPosition(OPEN_INTAKE);
+                }else if(gamepad2.right_bumper || gamepad1.right_bumper){
+                    claw.setPosition(CLOSE_INTAKE);
                 }
                 telemetry.addLine("motorLift Left: " + motorLiftL.getCurrentPosition());
                 telemetry.addLine("motorLift Right: " + motorLiftR.getCurrentPosition());
                 telemetry.update();
             }
+        }
+    }
+
+    private void setServPosLift(double pos){
+        servoLiftR.setPosition(pos);
+        servoLiftL.setPosition(pos);
+    }
+
+    /**
+     * Ставит ARM в Стандартное положение(Хватать конус)
+     *
+     * БОЧН ЧОРТ
+     */
+    private void initPOS(){
+        claw.setPosition(OPEN_INTAKE);
+        servoKrutilka.setPosition(rotateGrab);
+        setServPosLift(liftGrab);
+    }
+
+    /**
+     * Ставит ARM и переворачивает CLAW конустың салудың алдында
+     *
+     * КАБК черт
+     */
+    private void intakeUP(){
+        //initPOS();
+        //sleep(100);
+        claw.setPosition(CLOSE_INTAKE);
+        sleep(100);
+        setServPosLift(0.35);
+        sleep(150);
+        servoKrutilka.setPosition(rotatePerevorot);
+        sleep(400);
+        setServPosLift(liftIDlE);
+    }
+
+    private void intakeDOWN(){
+        if(servoLiftL.getPosition() > liftIDlE) {
+            claw.setPosition(0.8);
+            setServPosLift(liftIDlE - 0.1);
+            sleep(400);
+            servoKrutilka.setPosition(rotateGrab);
+            sleep(300);
+            setServPosLift(liftGrab + 0.05);
+            sleep(150);
+            claw.setPosition(OPEN_INTAKE);
+        } else {
+            setServPosLift(liftIDlE - 0.1);
+            sleep(100);
+            servoKrutilka.setPosition(rotateGrab);
+            sleep(250);
+            setServPosLift(liftGrab + 0.05);
+            claw.setPosition(OPEN_INTAKE);
         }
     }
 }
