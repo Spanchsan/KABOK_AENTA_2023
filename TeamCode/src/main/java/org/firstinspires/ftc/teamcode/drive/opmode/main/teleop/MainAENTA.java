@@ -3,16 +3,19 @@ package org.firstinspires.ftc.teamcode.drive.opmode.main.teleop;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.drive.opmode.IntakeConstants;
+import org.firstinspires.ftc.teamcode.util.Encoder;
 
 
 @TeleOp(name="BochonAgaSuper")
 
 public class MainAENTA extends LinearOpMode {
     DcMotor motorFL, motorBL, motorFR, motorBR, liftL, motorLiftL, motorLiftR;
+    //Encoder encoder;
     Servo servoLiftR, servoLiftL, servoKrutilka, claw;
     final double CLOSE_INTAKE = IntakeConstants.CLOSE_INTAKE,
             OPEN_INTAKE = IntakeConstants.OPEN_INTAKE,
@@ -37,6 +40,7 @@ public class MainAENTA extends LinearOpMode {
         servoLiftL = hardwareMap.get(Servo.class, "armL");
         claw = hardwareMap.get(Servo.class, "claw");
         servoKrutilka = hardwareMap.get(Servo.class, "servoKrutilka");
+        //encoder = new Encoder(hardwareMap.get(DcMotorEx.class, "enc1"));
 
         servoLiftR.setDirection(Servo.Direction.REVERSE);
         motorFL.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -77,8 +81,6 @@ public class MainAENTA extends LinearOpMode {
                 telemetry.addLine(String.valueOf(backLeftPower));
                 telemetry.addLine(String.valueOf(frontRightPower));
                 telemetry.addLine(String.valueOf(backRightPower));
-                telemetry.update();
-
                 if(gamepad2.dpad_up){
                     motorLiftL.setPower(1);
                     motorLiftR.setPower(1);
@@ -94,23 +96,18 @@ public class MainAENTA extends LinearOpMode {
                     motorLiftL.setPower(0);
                     motorLiftR.setPower(0);
                 }
-
+                if(gamepad2.x){
+                    servoKrutilka.setPosition(rotateGrab);
+                }else if(gamepad2.y){
+                    servoKrutilka.setPosition(rotatePerevorot);
+                }
                 if (gamepad2.right_trigger > 0.3) {
-                    //1
                     //PEREVOROT
                     setServPosLift(liftPerevorot);
                 } else if(gamepad2.left_trigger > 0.3) {
-                    //0.1
                     //GRAB
                     setServPosLift(liftGrab);
                 }
-                /*if(gamepad1.x){
-                    //PEREVOROT
-                    servoKrutilka.setPosition(rotatePerevorot);
-                }else if(gamepad1.y){
-                    //VNIZ
-                    servoKrutilka.setPosition(rotateGrab);
-                }*/
                 if(gamepad2.a){
                     if(!threadUP.isAlive())
                         threadUP.start();
@@ -125,11 +122,15 @@ public class MainAENTA extends LinearOpMode {
                 }
                 telemetry.addLine("motorLift Left: " + motorLiftL.getCurrentPosition());
                 telemetry.addLine("motorLift Right: " + motorLiftR.getCurrentPosition());
+               // telemetry.addLine("Encoder pos: " + encoder.getCurrentPosition());
                 telemetry.update();
             }
         }
     }
 
+    /**
+     * @param pos Position of the Servo
+     */
     private void setServPosLift(double pos){
         servoLiftR.setPosition(pos);
         servoLiftL.setPosition(pos);
@@ -163,6 +164,9 @@ public class MainAENTA extends LinearOpMode {
         setServPosLift(liftIDlE);
     }
 
+    /**
+     * ARM-ды конусты алудың позициясына қояды
+     */
     private void intakeDOWN(){
         if(servoLiftL.getPosition() > liftIDlE) {
             claw.setPosition(0.8);
