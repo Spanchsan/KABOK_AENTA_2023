@@ -183,10 +183,17 @@ public class MainAENTA extends LinearOpMode {
                         motorLiftL.setPower(0);
                         motorLiftR.setPower(0);
                     }
+                } else if (gamepad2.dpad_down) {
+                    thrWorking = false;
+                    motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    motorLiftL.setPower(-1);
+                    motorLiftR.setPower(-1);
                 } else {
                     motorLiftL.setPower(0);
                     motorLiftR.setPower(0);
                 }
+
                 if(!thrWorking && distanceSensor.getDistance(DistanceUnit.CM) < 1.5 && motorLiftL.getCurrentPosition() != 0 && motorLiftR.getCurrentPosition() != 0){
                     motorLiftR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     motorLiftL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
