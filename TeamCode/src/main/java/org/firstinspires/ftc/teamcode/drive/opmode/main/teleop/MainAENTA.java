@@ -5,8 +5,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.drive.opmode.IntakeConstants;
 import org.firstinspires.ftc.teamcode.util.Encoder;
 
@@ -14,9 +16,12 @@ import org.firstinspires.ftc.teamcode.util.Encoder;
 @TeleOp(name="BochonAgaSuper")
 
 public class MainAENTA extends LinearOpMode {
-    DcMotor motorFL, motorBL, motorFR, motorBR, liftL, motorLiftL, motorLiftR;
-    //Encoder encoder;
+    DcMotor motorFL, motorBL, motorFR, motorBR;
+    DcMotorEx motorLiftL, motorLiftR;
+    Encoder encPerp, encParl;
     Servo servoLiftR, servoLiftL, servoKrutilka, claw;
+    DistanceSensor distanceSensor;
+
     final double CLOSE_INTAKE = IntakeConstants.CLOSE_INTAKE,
             OPEN_INTAKE = IntakeConstants.OPEN_INTAKE,
         rotateGrab = IntakeConstants.ROTATE_GRAB,
@@ -27,6 +32,60 @@ public class MainAENTA extends LinearOpMode {
         liftIDlE = IntakeConstants.LIFT_IDLE;
     Thread threadUP = new Thread(this::intakeUP),
             threadDOWN = new Thread(this::intakeDOWN);
+    boolean thrWorking = false;
+    Thread threadHighJ = new Thread(() ->{
+        thrWorking = true;
+        intakeUP();
+        sleep(100);
+        motorLiftL.setTargetPosition(2200);
+        motorLiftR.setTargetPosition(2215);
+        motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLiftL.setPower(1);
+        motorLiftR.setPower(1);
+        while(motorLiftL.isBusy() || motorLiftR.isBusy()) {}
+        motorLiftL.setPower(0);
+        motorLiftR.setPower(0);
+        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        thrWorking = false;
+    }),
+    threadMidJ = new Thread(() -> {
+        thrWorking = true;
+        intakeUP();
+        sleep(100);
+        motorLiftL.setTargetPosition(1400);
+        motorLiftR.setTargetPosition(1415);
+        motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLiftL.setPower(1);
+        motorLiftR.setPower(1);
+        while(motorLiftL.isBusy() || motorLiftR.isBusy()) {}
+        motorLiftL.setPower(0);
+        motorLiftR.setPower(0);
+        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        thrWorking = false;
+    }),
+    threadLowJ = new Thread(() -> {
+        thrWorking = true;
+        intakeUP();
+        sleep(100);
+        motorLiftL.setTargetPosition(460);
+        motorLiftR.setTargetPosition(475);
+        motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLiftL.setPower(1);
+        motorLiftR.setPower(1);
+        while(motorLiftL.isBusy() || motorLiftR.isBusy()) {}
+        motorLiftL.setPower(0);
+        motorLiftR.setPower(0);
+        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        thrWorking = false;
+    })
+    ;
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -34,13 +93,16 @@ public class MainAENTA extends LinearOpMode {
         motorBL = hardwareMap.dcMotor.get("leftR");
         motorFR = hardwareMap.dcMotor.get("rightF");
         motorBR = hardwareMap.dcMotor.get("rightR");
-        motorLiftL = hardwareMap.dcMotor.get("liftL");
-        motorLiftR = hardwareMap.dcMotor.get("liftR");
+        motorLiftL = hardwareMap.get(DcMotorEx.class, "liftL");
+        motorLiftR = hardwareMap.get(DcMotorEx.class,"liftR");
         servoLiftR = hardwareMap.get(Servo.class, "armR");
         servoLiftL = hardwareMap.get(Servo.class, "armL");
         claw = hardwareMap.get(Servo.class, "claw");
         servoKrutilka = hardwareMap.get(Servo.class, "servoKrutilka");
-        //encoder = new Encoder(hardwareMap.get(DcMotorEx.class, "enc1"));
+        encPerp = new Encoder(hardwareMap.get(DcMotorEx.class, "encPerp"));
+        encParl = new Encoder(hardwareMap.get(DcMotorEx.class, "encParl"));
+
+        distanceSensor = hardwareMap.get(DistanceSensor.class, "distanceSensor");
 
         servoLiftR.setDirection(Servo.Direction.REVERSE);
         motorFL.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -52,6 +114,9 @@ public class MainAENTA extends LinearOpMode {
         motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        motorLiftR.setTargetPositionTolerance(70);
+        motorLiftL.setTargetPositionTolerance(70);
+
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -62,6 +127,7 @@ public class MainAENTA extends LinearOpMode {
 
         waitForStart();
         if(opModeIsActive()){
+            threadDOWN.start();
             while (opModeIsActive()){
                 double y = -gamepad1.left_stick_y; // Remember, this is reversed!
                 double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
@@ -72,33 +138,75 @@ public class MainAENTA extends LinearOpMode {
                 double frontRightPower = (y - x - rx) / denominator;
                 double backRightPower = (y + x - rx) / denominator;
 
-                motorFL.setPower(frontLeftPower);
-                motorBL.setPower(backLeftPower);
-                motorFR.setPower(frontRightPower);
-                motorBR.setPower(backRightPower);
+                motorFL.setPower(Math.pow(frontLeftPower, 3));
+                motorBL.setPower(Math.pow(backLeftPower, 3));
+                motorFR.setPower(Math.pow(frontRightPower, 3));
+                motorBR.setPower(Math.pow(backRightPower, 3));
+                if(gamepad1.dpad_up){
+                    motorFL.setPower(0.5);
+                    motorBL.setPower(0.5);
+                    motorFR.setPower(0.5);
+                    motorBR.setPower(0.5);
+                } else if(gamepad1.dpad_down){
+                    motorFL.setPower(-0.5);
+                    motorBL.setPower(-0.5);
+                    motorFR.setPower(-0.5);
+                    motorBR.setPower(-0.5);
+                }
 
                 telemetry.addLine(String.valueOf(frontLeftPower));
                 telemetry.addLine(String.valueOf(backLeftPower));
                 telemetry.addLine(String.valueOf(frontRightPower));
                 telemetry.addLine(String.valueOf(backRightPower));
-                if(gamepad2.dpad_up){
-                    motorLiftL.setPower(1);
-                    motorLiftR.setPower(1);
-                } else if(gamepad2.dpad_down){
-                    motorLiftL.setPower(-1);
-                    motorLiftR.setPower(-1);
-                }
-                else if(motorLiftL.getCurrentPosition() > 100 && motorLiftR.getCurrentPosition() > 100) {
-                    motorLiftL.setPower(0.001);
-                    motorLiftR.setPower(0.001);
-                }
-                else {
+                //2860 max height lift
+                //2220 high junction
+                //
+                if(motorLiftR.getCurrentPosition() < 2860 && motorLiftL.getCurrentPosition() < 2860) {
+                    if (gamepad2.dpad_up) {
+                        thrWorking = false;
+                        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                        motorLiftL.setPower(1);
+                        motorLiftR.setPower(1);
+                    } else if (gamepad2.dpad_down) {
+                        thrWorking = false;
+                        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                        motorLiftL.setPower(-1);
+                        motorLiftR.setPower(-1);
+                    } else if (motorLiftL.getCurrentPosition() > 100 && motorLiftR.getCurrentPosition() > 100 && !thrWorking) {
+                        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                        motorLiftL.setPower(0.001);
+                        motorLiftR.setPower(0.001);
+                    } else if(!thrWorking){
+                        motorLiftL.setPower(0);
+                        motorLiftR.setPower(0);
+                    }
+                } else {
                     motorLiftL.setPower(0);
                     motorLiftR.setPower(0);
                 }
-                if(gamepad2.x){
+                if(!thrWorking && distanceSensor.getDistance(DistanceUnit.CM) < 1.5 && motorLiftL.getCurrentPosition() != 0 && motorLiftR.getCurrentPosition() != 0){
+                    motorLiftR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    motorLiftL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+                }
+                if(gamepad2.y) {
+                    if (!threadHighJ.isAlive())
+                        threadHighJ.start();
+                } else if(gamepad2.x){
+                    if(!threadMidJ.isAlive())
+                        threadMidJ.start();
+                } else if(gamepad2.a){
+                    if(!threadLowJ.isAlive())
+                        threadLowJ.start();
+                }
+                if(gamepad1.x){
                     servoKrutilka.setPosition(rotateGrab);
-                }else if(gamepad2.y){
+                }else if(gamepad1.y){
                     servoKrutilka.setPosition(rotatePerevorot);
                 }
                 if (gamepad2.right_trigger > 0.3) {
@@ -108,7 +216,7 @@ public class MainAENTA extends LinearOpMode {
                     //GRAB
                     setServPosLift(liftGrab);
                 }
-                if(gamepad2.a){
+                if(gamepad2.right_stick_button){
                     if(!threadUP.isAlive())
                         threadUP.start();
                 } else if(gamepad2.b){
@@ -122,7 +230,9 @@ public class MainAENTA extends LinearOpMode {
                 }
                 telemetry.addLine("motorLift Left: " + motorLiftL.getCurrentPosition());
                 telemetry.addLine("motorLift Right: " + motorLiftR.getCurrentPosition());
-               // telemetry.addLine("Encoder pos: " + encoder.getCurrentPosition());
+                telemetry.addLine("Encoder Parl pos: " + encParl.getCurrentPosition());
+                telemetry.addLine("Encoder Perp pos: " + encPerp.getCurrentPosition());
+                telemetry.addLine("Distance Sensor: " + distanceSensor.getDistance(DistanceUnit.CM));
                 telemetry.update();
             }
         }
@@ -174,7 +284,7 @@ public class MainAENTA extends LinearOpMode {
             sleep(400);
             servoKrutilka.setPosition(rotateGrab);
             sleep(300);
-            setServPosLift(liftGrab + 0.05);
+            setServPosLift(liftGrab);
             sleep(150);
             claw.setPosition(OPEN_INTAKE);
         } else {
@@ -182,7 +292,7 @@ public class MainAENTA extends LinearOpMode {
             sleep(100);
             servoKrutilka.setPosition(rotateGrab);
             sleep(250);
-            setServPosLift(liftGrab + 0.05);
+            setServPosLift(liftGrab);
             claw.setPosition(OPEN_INTAKE);
         }
     }

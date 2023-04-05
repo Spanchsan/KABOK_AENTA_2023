@@ -102,27 +102,14 @@ public class SampleMecanumDrive extends MecanumDrive {
         // TODO: Adjust the orientations here to match your robot. See the FTC SDK documentation for
         // details
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
+                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP));
         imu.initialize(parameters);
 
-        leftFront = hardwareMap.get(DcMotorEx.class, "motor1");
-        leftRear = hardwareMap.get(DcMotorEx.class, "emotor2");
-        rightRear = hardwareMap.get(DcMotorEx.class, "emotor3");
-        rightFront = hardwareMap.get(DcMotorEx.class, "motor3");
-        sExtend1 = hardwareMap.servo.get("serv0");
-        sExtend2 = hardwareMap.servo.get("serv1");
-        sUpDownClaw1 = hardwareMap.servo.get("serv2");
-        sUpDownClaw2 = hardwareMap.servo.get("serv3");
-        sRotateClaw = hardwareMap.servo.get("serv4");
-        sClaw = hardwareMap.servo.get("serv5");
-        motorLift0 = hardwareMap.get(DcMotorEx.class, "motor0");
-        motorLift1 = hardwareMap.get(DcMotorEx.class, "emotor1");
-        //motorLift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorLift0.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorLift1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        // motorLift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        //motorLift1.setTargetPositionTolerance(15);
+        leftFront = hardwareMap.get(DcMotorEx.class, "leftF");
+        leftRear = hardwareMap.get(DcMotorEx.class, "leftR");
+        rightRear = hardwareMap.get(DcMotorEx.class, "rightR");
+        rightFront = hardwareMap.get(DcMotorEx.class, "rightF");
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 
         for (DcMotorEx motor : motors) {
@@ -142,10 +129,11 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
 
         // TODO: reverse any motors using DcMotor.setDirection()
-        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
         // TODO: if desired, use setLocalizer() to change the localization method
         // for instance, setLocalizer(new ThreeTrackingWheelLocalizer(...));
+        setLocalizer(new TwoWheelTrackingLocalizer(hardwareMap, this));
 
         trajectorySequenceRunner = new TrajectorySequenceRunner(follower, HEADING_PID);
     }
@@ -300,7 +288,7 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     @Override
     public Double getExternalHeadingVelocity() {
-        return (double) imu.getRobotAngularVelocity(AngleUnit.RADIANS).zRotationRate;
+        return (double) imu.getRobotAngularVelocity(AngleUnit.RADIANS).xRotationRate;
     }
 
     public static TrajectoryVelocityConstraint getVelocityConstraint(double maxVel, double maxAngularVel, double trackWidth) {
