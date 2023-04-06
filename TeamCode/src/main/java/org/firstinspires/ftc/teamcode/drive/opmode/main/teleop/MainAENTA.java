@@ -19,7 +19,8 @@ public class MainAENTA extends LinearOpMode {
     DcMotor motorFL, motorBL, motorFR, motorBR;
     DcMotorEx motorLiftL, motorLiftR;
     Encoder encPerp, encParl;
-    Servo servoLiftR, servoLiftL, servoKrutilka, claw;
+    Servo servoLiftR, servoLiftL, servoKrutilka, claw,
+        servoEncL, servoEncR, servoEncPerp;
     DistanceSensor distanceSensor;
 
     final double CLOSE_INTAKE = IntakeConstants.CLOSE_INTAKE,
@@ -89,45 +90,10 @@ public class MainAENTA extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        motorFL = hardwareMap.dcMotor.get("leftF");
-        motorBL = hardwareMap.dcMotor.get("leftR");
-        motorFR = hardwareMap.dcMotor.get("rightF");
-        motorBR = hardwareMap.dcMotor.get("rightR");
-        motorLiftL = hardwareMap.get(DcMotorEx.class, "liftL");
-        motorLiftR = hardwareMap.get(DcMotorEx.class,"liftR");
-        servoLiftR = hardwareMap.get(Servo.class, "armR");
-        servoLiftL = hardwareMap.get(Servo.class, "armL");
-        claw = hardwareMap.get(Servo.class, "claw");
-        servoKrutilka = hardwareMap.get(Servo.class, "servoKrutilka");
-        encPerp = new Encoder(hardwareMap.get(DcMotorEx.class, "encPerp"));
-        encParl = new Encoder(hardwareMap.get(DcMotorEx.class, "encParl"));
-
-        distanceSensor = hardwareMap.get(DistanceSensor.class, "distanceSensor");
-
-        servoLiftR.setDirection(Servo.Direction.REVERSE);
-        motorFL.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorBL.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorLiftR.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        motorLiftR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorLiftL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        motorLiftR.setTargetPositionTolerance(70);
-        motorLiftL.setTargetPositionTolerance(70);
-
-        motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorLiftR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorLiftL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-
+        initHardware();
         waitForStart();
         if(opModeIsActive()){
-            threadDOWN.start();
+            initStart();
             while (opModeIsActive()){
                 double y = -gamepad1.left_stick_y; // Remember, this is reversed!
                 double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
@@ -138,10 +104,10 @@ public class MainAENTA extends LinearOpMode {
                 double frontRightPower = (y - x - rx) / denominator;
                 double backRightPower = (y + x - rx) / denominator;
 
-                motorFL.setPower(Math.pow(frontLeftPower, 3));
-                motorBL.setPower(Math.pow(backLeftPower, 3));
-                motorFR.setPower(Math.pow(frontRightPower, 3));
-                motorBR.setPower(Math.pow(backRightPower, 3));
+                motorFL.setPower(frontLeftPower);
+                motorBL.setPower(backLeftPower);
+                motorFR.setPower(frontRightPower);
+                motorBR.setPower(backRightPower);
                 if(gamepad1.dpad_up){
                     motorFL.setPower(0.5);
                     motorBL.setPower(0.5);
@@ -245,24 +211,6 @@ public class MainAENTA extends LinearOpMode {
         }
     }
 
-    /**
-     * @param pos Position of the Servo
-     */
-    private void setServPosLift(double pos){
-        servoLiftR.setPosition(pos);
-        servoLiftL.setPosition(pos);
-    }
-
-    /**
-     * Ставит ARM в Стандартное положение(Хватать конус)
-     *
-     * БОЧН ЧОРТ
-     */
-    private void initPOS(){
-        claw.setPosition(OPEN_INTAKE);
-        servoKrutilka.setPosition(rotateGrab);
-        setServPosLift(liftGrab);
-    }
 
     /**
      * Ставит ARM и переворачивает CLAW конустың салудың алдында
@@ -302,5 +250,66 @@ public class MainAENTA extends LinearOpMode {
             setServPosLift(liftGrab);
             claw.setPosition(OPEN_INTAKE);
         }
+    }
+
+    private void initHardware(){
+        motorFL = hardwareMap.dcMotor.get("leftF");
+        motorBL = hardwareMap.dcMotor.get("leftR");
+        motorFR = hardwareMap.dcMotor.get("rightF");
+        motorBR = hardwareMap.dcMotor.get("rightR");
+        motorLiftL = hardwareMap.get(DcMotorEx.class, "liftL");
+        motorLiftR = hardwareMap.get(DcMotorEx.class,"liftR");
+        servoLiftR = hardwareMap.get(Servo.class, "armR");
+        servoLiftL = hardwareMap.get(Servo.class, "armL");
+        claw = hardwareMap.get(Servo.class, "claw");
+        servoKrutilka = hardwareMap.get(Servo.class, "servoKrutilka");
+        servoEncL = hardwareMap.get(Servo.class, "servoEncL");
+        servoEncR = hardwareMap.get(Servo.class, "servoEncR");
+        servoEncPerp = hardwareMap.get(Servo.class, "servoEncPerp");
+
+        encPerp = new Encoder(hardwareMap.get(DcMotorEx.class, "encPerp"));
+        encParl = new Encoder(hardwareMap.get(DcMotorEx.class, "encParl"));
+
+        distanceSensor = hardwareMap.get(DistanceSensor.class, "distanceSensor");
+
+        servoLiftR.setDirection(Servo.Direction.REVERSE);
+        motorFL.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorBL.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorLiftR.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        motorLiftR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLiftL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        motorLiftR.setTargetPositionTolerance(70);
+        motorLiftL.setTargetPositionTolerance(70);
+
+        motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorLiftR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorLiftL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    }
+
+    /**
+     * @param pos Position of the Servo
+     */
+    private void setServPosLift(double pos){
+        servoLiftR.setPosition(pos);
+        servoLiftL.setPosition(pos);
+    }
+
+    /**
+     * Ставит ARM в Стандартное положение(Хватать конус)
+     *
+     * БОЧН ЧОРТ
+     */
+    private void initStart(){
+        threadDOWN.start();
+        servoEncL.setPosition(1);
+        servoEncR.setPosition(1);
+        servoEncPerp.setPosition(1);
     }
 }
