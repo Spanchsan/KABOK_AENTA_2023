@@ -65,11 +65,6 @@ public class SampleMecanumDrive extends MecanumDrive {
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(2, 0, 0);
 
     public static double LATERAL_MULTIPLIER = 1.15;
-
-    final double CLOSE_INTAKE = IntakeConstants.CLOSE_INTAKE,
-            OPEN_INTAKE = IntakeConstants.OPEN_INTAKE,
-            IDLE_INTAKE_POS = IntakeConstants.IDLE_INTAKE_POS;
-    final double LOWEST_CONE_INTAKE = IntakeConstants.LOWEST_CONE_INTAKE;
     public static double VX_WEIGHT = 1;
     public static double VY_WEIGHT = 1;
     public static double OMEGA_WEIGHT = 1;
@@ -107,27 +102,14 @@ public class SampleMecanumDrive extends MecanumDrive {
         // TODO: Adjust the orientations here to match your robot. See the FTC SDK documentation for
         // details
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
+                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP));
         imu.initialize(parameters);
 
-        leftFront = hardwareMap.get(DcMotorEx.class, "motor1");
-        leftRear = hardwareMap.get(DcMotorEx.class, "emotor2");
-        rightRear = hardwareMap.get(DcMotorEx.class, "emotor3");
-        rightFront = hardwareMap.get(DcMotorEx.class, "motor3");
-        sExtend1 = hardwareMap.servo.get("serv0");
-        sExtend2 = hardwareMap.servo.get("serv1");
-        sUpDownClaw1 = hardwareMap.servo.get("serv2");
-        sUpDownClaw2 = hardwareMap.servo.get("serv3");
-        sRotateClaw = hardwareMap.servo.get("serv4");
-        sClaw = hardwareMap.servo.get("serv5");
-        motorLift0 = hardwareMap.get(DcMotorEx.class, "motor0");
-        motorLift1 = hardwareMap.get(DcMotorEx.class, "emotor1");
-        //motorLift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorLift0.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorLift1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        // motorLift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        //motorLift1.setTargetPositionTolerance(15);
+        leftFront = hardwareMap.get(DcMotorEx.class, "leftF");
+        leftRear = hardwareMap.get(DcMotorEx.class, "leftR");
+        rightRear = hardwareMap.get(DcMotorEx.class, "rightR");
+        rightFront = hardwareMap.get(DcMotorEx.class, "rightF");
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 
         for (DcMotorEx motor : motors) {
@@ -147,10 +129,11 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
 
         // TODO: reverse any motors using DcMotor.setDirection()
-        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
         // TODO: if desired, use setLocalizer() to change the localization method
         // for instance, setLocalizer(new ThreeTrackingWheelLocalizer(...));
+        setLocalizer(new TwoWheelTrackingLocalizer(hardwareMap, this));
 
         trajectorySequenceRunner = new TrajectorySequenceRunner(follower, HEADING_PID);
     }
@@ -305,7 +288,7 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     @Override
     public Double getExternalHeadingVelocity() {
-        return (double) imu.getRobotAngularVelocity(AngleUnit.RADIANS).zRotationRate;
+        return (double) imu.getRobotAngularVelocity(AngleUnit.RADIANS).xRotationRate;
     }
 
     public static TrajectoryVelocityConstraint getVelocityConstraint(double maxVel, double maxAngularVel, double trackWidth) {
@@ -317,278 +300,5 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     public static TrajectoryAccelerationConstraint getAccelerationConstraint(double maxAccel) {
         return new ProfileAccelerationConstraint(maxAccel);
-    }
-
-
-    /**
-     * @param position position of the extension of intake
-     *                 Position: 1, fully folded(to the robot)
-     *                 Position: 0, fully extended
-     */
-    protected void setExtendIntake(double position){
-        sExtend1.setPosition(position);
-        sExtend2.setPosition(1 - position);
-    }
-
-    /**
-     * @param position position of the extension of intake
-     *                 Position: 0, fully upped(folded to the robot)
-     *                 Position: 1, fully downed(extended)
-     *                 position: 0.35 - IDLE
-     *                 position: 0.73 - 5th highest cone(HIGH)
-     *                 position: 0.75 - 4th highest cone
-     *                 position: 0.79 - 3th highest cone
-     *                 position: 0.85 - 2th highest cone
-     *                 position: 0.92 - 1th highest cone(GROUND)
-     */
-    protected void setUpDownIntake(double position){
-        sUpDownClaw1.setPosition(position);
-        sUpDownClaw2.setPosition(position);
-    }
-
-    /**
-     * @param position position of the rotation of the claw
-     *                 Position: 0 - to grab the cone
-     *                 position: 1 - to put on the basket
-     */
-    protected void setRotateClaw(double position){
-        sRotateClaw.setPosition(position);
-    }
-
-    /**
-     * @param position - position of the Claw
-     *                 Position: 0 - hold the cone
-     *                 Position: 0.7 - release the cone
-     */
-    protected void setClaw(double position){
-        sClaw.setPosition(position);
-    }
-
-    /**
-     * SETs Intake compartments to the IDLE position
-     */
-    public void IDLEIntakePosition(){
-        setExtendIntake(1);
-        setUpDownIntake(IDLE_INTAKE_POS);
-        setRotateClaw(0);
-        //sleep(300);
-    }
-
-    public void IDLEIntakePosition1(){
-        setUpDownIntake(IDLE_INTAKE_POS);
-        sleep(100);
-        setRotateClaw(0);
-    }
-
-    /**
-     * @param positionIntake - position of the Intake to be Set when at grabbing state
-     * @param positionExtend - position of the Extend to be Set when at grabbing state
-     */
-    public void GRABIntakePosition(double positionIntake, double positionExtend){
-        double overallTime = 750 * (1 - positionExtend);
-        setClaw(OPEN_INTAKE);
-        setExtendIntake(positionExtend);
-        setUpDownIntake(0.5);
-        sleep(100);
-        setRotateClaw(0);
-        sleep((long) (overallTime * 0.2));
-        setUpDownIntake(positionIntake);
-        sleep((long) (overallTime * 0.8));
-        setClaw(CLOSE_INTAKE);
-        sleep(450);
-    }
-
-    /**
-     * Put cone to the Robot Basket
-     * Standard position: UpDown Intake - 0.27
-     *                    Extend Intake - 1
-     */
-    public void PUTCONEIntakePosition1(){
-        double overallTime = Math.max(800, 1000 * (1 - sExtend1.getPosition()));
-        setUpDownIntake(0.45);
-        sleep(650);
-        setExtendIntake(1);
-        setRotateClaw(1);
-        sleep((long) (overallTime * 0.6));
-        setUpDownIntake(0.27);
-        sleep((long) (overallTime * 0.4));
-        setClaw(OPEN_INTAKE);
-        sleep(200);
-    }
-
-    public void EXTENDIntakePosition(double positionIntake, double positionExtend){
-        double overallTime = 750 * (1 - positionExtend);
-        setClaw(OPEN_INTAKE);
-        setExtendIntake(positionExtend);
-        setUpDownIntake(0.5);
-        sleep(100);
-        setRotateClaw(0);
-        sleep((long) (overallTime * 0.2));
-        setUpDownIntake(positionIntake);
-        sleep((long) (overallTime * 0.8));
-    }
-
-    public void EXTENDIntakePosition1(double positionIntake, double positionExtend){
-        double overallTime = 750 * (1 - positionExtend);
-        setClaw(OPEN_INTAKE);
-        setUpDownIntake(0.7);
-        sleep(400);
-        setExtendIntake(positionExtend);
-        sleep(100);
-        setRotateClaw(0);
-        sleep((long) (overallTime * 0.2));
-        setUpDownIntake(positionIntake);
-        sleep((long) (overallTime * 0.8));
-    }
-
-    public void GRAB_PUTCONEIntakePosition1(){
-        double overallTime = Math.max(800, 940 * (1 - sExtend1.getPosition()));
-        setClaw(CLOSE_INTAKE);
-        sleep(450);
-        setUpDownIntake(0.45);
-        sleep(500);
-        setExtendIntake(1);
-        setRotateClaw(1);
-        sleep((long) (overallTime * 0.6));
-        setUpDownIntake(0.27);
-        sleep((long) (overallTime * 0.4));
-        setClaw(OPEN_INTAKE);
-        sleep(200);
-        IDLEIntakePosition1();
-    }
-
-    public void EXTEND_GRAB_PUTCONEIntakePosition1(double positionIntake, double positionExtend){
-        EXTENDIntakePosition(positionIntake, positionExtend);
-        GRAB_PUTCONEIntakePosition1();
-    }
-
-    public void EXTEND_GRAB_PUTCONEIntakePosition12(double positionIntake, double positionExtend){
-        EXTENDIntakePosition1(positionIntake, positionExtend);
-        GRAB_PUTCONEIntakePosition1();
-    }
-
-    public void sleep(long milliseconds){
-        try {
-            Thread.sleep(milliseconds);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    public void throwCone(double power, int highestPos, int lowestPos, Telemetry telemetry, Function<Void, Boolean> func){
-        motorLift1.setTargetPosition(highestPos);
-        motorLift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorLift1.setPower(power);
-        motorLift0.setPower(power);
-        while(motorLift1.isBusy()) {
-            telemetry.addLine("" + motorLift1.getCurrentPosition());
-            telemetry.addLine("Motor1: " + motorLift1.getPower() + " Motor0: " + motorLift0.getPower());
-            telemetry.update();
-        }
-        //sleep(300);
-        motorLift1.setTargetPosition(lowestPos);
-        motorLift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorLift1.setPower(1);
-        motorLift0.setPower(-1);
-        while(motorLift1.isBusy()){
-            telemetry.addLine("" + motorLift1.getCurrentPosition());
-            telemetry.addLine("Motor1: " + motorLift1.getPower() + " Motor0: " + motorLift0.getPower());
-            telemetry.update();
-        }
-        motorLift1.setPower(0);
-        motorLift0.setPower(0);
-    }
-
-    public void upCone(double power, int highPos, Telemetry telemetry, Function<Void, Boolean> func){
-        motorLift1.setTargetPosition(highPos);
-        motorLift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorLift1.setPower(power);
-        motorLift0.setPower(power);
-        while(motorLift1.isBusy() && !func.apply(null)) {
-            telemetry.addLine("" + motorLift1.getCurrentPosition());
-            telemetry.addLine("Motor1: " + motorLift1.getPower() + " Motor0: " + motorLift0.getPower());
-            telemetry.update();
-        }
-        motorLift1.setPower(0);
-        motorLift0.setPower(0);
-    }
-
-    public void downCone(double power, double secs, Telemetry telemetry, Function<Void, Boolean> func){
-        motorLift1.setPower(-power);
-        motorLift0.setPower(-power);
-        ElapsedTime runtime = new ElapsedTime();
-        runtime.reset();
-        while(runtime.seconds() <= secs && !func.apply(null)) {
-            telemetry.addLine("" + motorLift1.getCurrentPosition());
-            telemetry.addLine("Motor1: " + motorLift1.getPower() + " Motor0: " + motorLift0.getPower());
-            telemetry.update();
-        }
-        motorLift1.setPower(0);
-        motorLift0.setPower(0);
-    }
-
-    public void throwCone1(double power, double seconds, Telemetry telemetry){
-        ElapsedTime runtime = new ElapsedTime();
-        runtime.reset();
-        long idleT = 100;
-        motorLift1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motorLift1.setPower(power);
-        motorLift0.setPower(power);
-        while(runtime.seconds() <= seconds) {
-            telemetry.addLine("" + motorLift1.getCurrentPosition());
-            telemetry.addLine("Motor1: " + motorLift1.getPower() + " Motor0: " + motorLift0.getPower());
-            telemetry.update();
-        }
-        motorLift1.setPower(0);
-        motorLift0.setPower(0);
-        sleep(idleT);
-        runtime.reset();
-        motorLift1.setPower(-power);
-        motorLift0.setPower(-power);
-        while(runtime.seconds() <= seconds * 1.25) {
-            telemetry.addLine("" + motorLift1.getCurrentPosition());
-            telemetry.addLine("Motor1: " + motorLift1.getPower() + " Motor0: " + motorLift0.getPower());
-            telemetry.update();
-        }
-        motorLift1.setPower(0);
-        motorLift0.setPower(0);
-    }
-
-    public void throwCone2_1(double power, double seconds, Telemetry telemetry){
-        ElapsedTime runtime = new ElapsedTime();
-        runtime.reset();
-        motorLift1.setPower(power);
-        motorLift0.setPower(power);
-        while(runtime.seconds() <= seconds * 0.85) {
-            telemetry.addLine("" + motorLift1.getCurrentPosition());
-            telemetry.addLine("Motor1: " + motorLift1.getPower() + " Motor0: " + motorLift0.getPower());
-            telemetry.update();
-        }
-//        motorLift1.setPower(0);
-//        motorLift0.setPower(0);
-    }
-
-    public void throwCone2_2(double power, double seconds, Telemetry telemetry){
-        ElapsedTime runtime = new ElapsedTime();
-        runtime.reset();
-        motorLift1.setPower(power);
-        motorLift0.setPower(power);
-        while(runtime.seconds() <= seconds * 0.15) {
-            telemetry.addLine("" + motorLift1.getCurrentPosition());
-            telemetry.addLine("Motor1: " + motorLift1.getPower() + " Motor0: " + motorLift0.getPower());
-            telemetry.update();
-        }
-        motorLift1.setPower(0);
-        motorLift0.setPower(0);
-        runtime.reset();
-        motorLift1.setPower(-power);
-        motorLift0.setPower(-power);
-        while(runtime.seconds() <= seconds) {
-            telemetry.addLine("" + motorLift1.getCurrentPosition());
-            telemetry.addLine("Motor1: " + motorLift1.getPower() + " Motor0: " + motorLift0.getPower());
-            telemetry.update();
-        }
-        motorLift1.setPower(0);
-        motorLift0.setPower(0);
     }
 }
