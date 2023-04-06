@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.util.TagDetector;
  */
 @Config
 @Autonomous(group = "drive")
-public class AutoRightSide extends LinearOpMode {
+public class AutoRightSideSleeped extends LinearOpMode {
 
     private VoltageSensor batteryVoltageSensor;
     private TagDetector detector;
@@ -59,7 +59,7 @@ public class AutoRightSide extends LinearOpMode {
         waitForStart();
 
         if (isStopRequested()) return;
-
+        sleep(2000);
         drive.followTrajectory(traj1);
         drive.followTrajectory(traj2);
         drive.followTrajectory(traj21);
@@ -92,11 +92,11 @@ public class AutoRightSide extends LinearOpMode {
         drive.throwCone2_2(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
         while(threadTemp.isAlive());
         //5th
-        drive.throwCone2_1(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
-        threadTemp = new Thread(() -> drive.EXTEND_GRAB_PUTCONEIntakePosition12(0.91, extd+0.2));
-        threadTemp.start();
-        drive.throwCone2_2(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
-        while(threadTemp.isAlive());
+//        drive.throwCone2_1(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
+//        threadTemp = new Thread(() -> drive.EXTEND_GRAB_PUTCONEIntakePosition12(0.91, extd+0.2));
+//        threadTemp.start();
+//        drive.throwCone2_2(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
+//        while(threadTemp.isAlive());
         //6th
         drive.throwCone1(powr, tim * 12.6 / batteryVoltageSensor.getVoltage(), telemetry);
         if(currTag == TagDetector.Tag.right){
