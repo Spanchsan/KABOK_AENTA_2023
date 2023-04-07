@@ -22,6 +22,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
@@ -38,6 +39,7 @@ import org.firstinspires.ftc.teamcode.drive.opmode.IntakeConstants;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceRunner;
+import org.firstinspires.ftc.teamcode.util.Encoder;
 import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
 
 import java.util.ArrayList;
@@ -77,12 +79,22 @@ public class SampleMecanumDrive extends MecanumDrive {
     private TrajectoryFollower follower;
 
     private DcMotorEx leftFront, leftRear, rightRear, rightFront;
-    public DcMotorEx motorLift0, motorLift1;
-    Servo sExtend1, sExtend2, sUpDownClaw1, sUpDownClaw2, sRotateClaw, sClaw;
+    DcMotorEx motorLiftL, motorLiftR;
+    Servo servoLiftR, servoLiftL, servoKrutilka, claw,
+            servoEncL, servoEncR, servoEncPerp;
     private List<DcMotorEx> motors;
 
     private IMU imu;
     private VoltageSensor batteryVoltageSensor;
+
+    final double CLOSE_INTAKE = IntakeConstants.CLOSE_INTAKE,
+            OPEN_INTAKE = IntakeConstants.OPEN_INTAKE,
+            rotateGrab = IntakeConstants.ROTATE_GRAB,
+            rotatePerevorot = IntakeConstants.ROTATE_PEREVOROT,
+            liftGrab = IntakeConstants.LIFT_GRAB,
+            liftPerevorot = IntakeConstants.LIFT_PEREVOROT,
+    //қолдың позициясы конусты салудың алдында
+    liftIDlE = IntakeConstants.LIFT_IDLE;
 
     public SampleMecanumDrive(HardwareMap hardwareMap) {
         super(kV, kA, kStatic, TRACK_WIDTH, TRACK_WIDTH, LATERAL_MULTIPLIER);
@@ -102,8 +114,8 @@ public class SampleMecanumDrive extends MecanumDrive {
         // TODO: Adjust the orientations here to match your robot. See the FTC SDK documentation for
         // details
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP));
+                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
         imu.initialize(parameters);
 
         leftFront = hardwareMap.get(DcMotorEx.class, "leftF");
@@ -288,7 +300,7 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     @Override
     public Double getExternalHeadingVelocity() {
-        return (double) imu.getRobotAngularVelocity(AngleUnit.RADIANS).xRotationRate;
+        return (double) imu.getRobotAngularVelocity(AngleUnit.RADIANS).yRotationRate;
     }
 
     public static TrajectoryVelocityConstraint getVelocityConstraint(double maxVel, double maxAngularVel, double trackWidth) {
@@ -300,5 +312,97 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     public static TrajectoryAccelerationConstraint getAccelerationConstraint(double maxAccel) {
         return new ProfileAccelerationConstraint(maxAccel);
+    }
+
+    public final void sleep(long milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void initHardware(HardwareMap hardwareMap){
+        motorLiftL = hardwareMap.get(DcMotorEx.class, "liftL");
+        motorLiftR = hardwareMap.get(DcMotorEx.class,"liftR");
+        servoLiftR = hardwareMap.get(Servo.class, "armR");
+        servoLiftL = hardwareMap.get(Servo.class, "armL");
+        claw = hardwareMap.get(Servo.class, "claw");
+        servoKrutilka = hardwareMap.get(Servo.class, "servoKrutilka");
+        servoEncL = hardwareMap.get(Servo.class, "servoEncL");
+        servoEncR = hardwareMap.get(Servo.class, "servoEncR");
+        servoEncPerp = hardwareMap.get(Servo.class, "servoEncPerp");
+        servoLiftR.setDirection(Servo.Direction.REVERSE);
+        motorLiftR.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        motorLiftR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLiftL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        motorLiftR.setTargetPositionTolerance(70);
+        motorLiftL.setTargetPositionTolerance(70);
+        motorLiftR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorLiftL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    }
+
+    public void changePosLift(int pos, double power){
+        motorLiftL.setTargetPosition(pos);
+        motorLiftR.setTargetPosition(pos);
+        motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLiftL.setPower(power);
+        motorLiftR.setPower(power);
+        while(motorLiftL.isBusy() || motorLiftR.isBusy()) {}
+        motorLiftL.setPower(0);
+        motorLiftR.setPower(0);
+        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    /**
+     * @param pos Position of the Servo
+     */
+    private void setServPosLift(double pos){
+        servoLiftR.setPosition(pos);
+        servoLiftL.setPosition(pos);
+    }
+
+    /**
+     * Ставит ARM и переворачивает CLAW конустың салудың алдында
+     *
+     * КАБК черт
+     */
+    public void intakeUP(){
+        claw.setPosition(CLOSE_INTAKE);
+        sleep(100);
+        setServPosLift(0.35);
+        sleep(150);
+        servoKrutilka.setPosition(rotatePerevorot);
+        sleep(400);
+        setServPosLift(liftIDlE);
+    }
+
+    /**
+     * ARM-ды конусты алудың позициясына қояды
+     */
+    public void intakeDOWN(){
+        if(servoLiftL.getPosition() > liftIDlE) {
+            claw.setPosition(0.8);
+            setServPosLift(liftIDlE - 0.1);
+            sleep(400);
+            servoKrutilka.setPosition(rotateGrab);
+            sleep(300);
+            setServPosLift(liftGrab);
+            sleep(150);
+            claw.setPosition(OPEN_INTAKE);
+        } else {
+            setServPosLift(liftIDlE - 0.1);
+            sleep(100);
+            servoKrutilka.setPosition(rotateGrab);
+            sleep(250);
+            setServPosLift(liftGrab);
+            claw.setPosition(OPEN_INTAKE);
+        }
     }
 }

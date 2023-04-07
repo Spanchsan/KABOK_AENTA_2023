@@ -20,7 +20,7 @@ public class MainAENTA extends LinearOpMode {
     DcMotorEx motorLiftL, motorLiftR;
     Encoder encPerp, encParl;
     Servo servoLiftR, servoLiftL, servoKrutilka, claw,
-        servoEncL, servoEncR, servoEncPerp;
+            servoEnc1, servoEnc2;
     DistanceSensor distanceSensor;
 
     final double CLOSE_INTAKE = IntakeConstants.CLOSE_INTAKE,
@@ -39,7 +39,7 @@ public class MainAENTA extends LinearOpMode {
         intakeUP();
         sleep(100);
         motorLiftL.setTargetPosition(2200);
-        motorLiftR.setTargetPosition(2215);
+        motorLiftR.setTargetPosition(2200);
         motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLiftL.setPower(1);
@@ -56,7 +56,7 @@ public class MainAENTA extends LinearOpMode {
         intakeUP();
         sleep(100);
         motorLiftL.setTargetPosition(1400);
-        motorLiftR.setTargetPosition(1415);
+        motorLiftR.setTargetPosition(1400);
         motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLiftL.setPower(1);
@@ -73,7 +73,7 @@ public class MainAENTA extends LinearOpMode {
         intakeUP();
         sleep(100);
         motorLiftL.setTargetPosition(460);
-        motorLiftR.setTargetPosition(475);
+        motorLiftR.setTargetPosition(460);
         motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLiftL.setPower(1);
@@ -84,8 +84,7 @@ public class MainAENTA extends LinearOpMode {
         motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         thrWorking = false;
-    })
-    ;
+    });
 
 
     @Override
@@ -143,8 +142,8 @@ public class MainAENTA extends LinearOpMode {
                     } else if (motorLiftL.getCurrentPosition() > 100 && motorLiftR.getCurrentPosition() > 100 && !thrWorking) {
                         motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                         motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                        motorLiftL.setPower(0.001);
-                        motorLiftR.setPower(0.001);
+                        motorLiftL.setPower(0.0025);
+                        motorLiftR.setPower(0.0025);
                     } else if(!thrWorking){
                         motorLiftL.setPower(0);
                         motorLiftR.setPower(0);
@@ -197,8 +196,10 @@ public class MainAENTA extends LinearOpMode {
                         threadDOWN.start();
                 }
                 if(gamepad2.left_bumper || gamepad1.left_bumper){
+                    telemetry.addLine("LEft BMPER");
                     claw.setPosition(OPEN_INTAKE);
                 }else if(gamepad2.right_bumper || gamepad1.right_bumper){
+                    telemetry.addLine("RIGHT BMPER");
                     claw.setPosition(CLOSE_INTAKE);
                 }
                 telemetry.addLine("motorLift Left: " + motorLiftL.getCurrentPosition());
@@ -223,9 +224,9 @@ public class MainAENTA extends LinearOpMode {
         claw.setPosition(CLOSE_INTAKE);
         sleep(100);
         setServPosLift(0.35);
-        sleep(150);
+        sleep(250);
         servoKrutilka.setPosition(rotatePerevorot);
-        sleep(400);
+        sleep(300);
         setServPosLift(liftIDlE);
     }
 
@@ -234,7 +235,7 @@ public class MainAENTA extends LinearOpMode {
      */
     private void intakeDOWN(){
         if(servoLiftL.getPosition() > liftIDlE) {
-            claw.setPosition(0.8);
+            claw.setPosition(0.825);
             setServPosLift(liftIDlE - 0.1);
             sleep(400);
             servoKrutilka.setPosition(rotateGrab);
@@ -263,9 +264,8 @@ public class MainAENTA extends LinearOpMode {
         servoLiftL = hardwareMap.get(Servo.class, "armL");
         claw = hardwareMap.get(Servo.class, "claw");
         servoKrutilka = hardwareMap.get(Servo.class, "servoKrutilka");
-        servoEncL = hardwareMap.get(Servo.class, "servoEncL");
-        servoEncR = hardwareMap.get(Servo.class, "servoEncR");
-        servoEncPerp = hardwareMap.get(Servo.class, "servoEncPerp");
+        servoEnc1 = hardwareMap.get(Servo.class, "servoEnc1");
+        servoEnc2 = hardwareMap.get(Servo.class, "servoEnc2");
 
         encPerp = new Encoder(hardwareMap.get(DcMotorEx.class, "encPerp"));
         encParl = new Encoder(hardwareMap.get(DcMotorEx.class, "encParl"));
@@ -308,8 +308,7 @@ public class MainAENTA extends LinearOpMode {
      */
     private void initStart(){
         threadDOWN.start();
-        servoEncL.setPosition(1);
-        servoEncR.setPosition(1);
-        servoEncPerp.setPosition(1);
+        servoEnc1.setPosition(0);
+        servoEnc2.setPosition(1);
     }
 }

@@ -34,8 +34,8 @@ public class DriveConstants {
      * from DriveVelocityPIDTuner.
      */
     public static final boolean RUN_USING_ENCODER = true;
-    public static PIDFCoefficients MOTOR_VELO_PID = new PIDFCoefficients(15, 0, 4,
-            19.16);
+    public static PIDFCoefficients MOTOR_VELO_PID = new PIDFCoefficients(0, 0, 0,
+            getMotorVelocityF(MAX_RPM / 60 * TICKS_PER_REV));
 
     /*
      * These are physical constants that can be determined from your robot (including the track
@@ -70,38 +70,27 @@ public class DriveConstants {
      * Note from LearnRoadRunner.com:
      * The velocity and acceleration constraints were calculated based on the following equation:
      * ((MAX_RPM / 60) * GEAR_RATIO * WHEEL_RADIUS * 2 * Math.PI) * 0.85
-     * Resulting in 1007.6720463994614 in/s.
+     * Resulting in 52.48291908330528 in/s.
      * This is only 85% of the theoretical maximum velocity of the bot, following the recommendation above.
      * This is capped at 85% because there are a number of variables that will prevent your bot from actually
      * reaching this maximum velocity: voltage dropping over the game, bot weight, general mechanical inefficiencies, etc.
      * However, you can push this higher yourself if you'd like. Perhaps raise it to 90-95% of the theoretically
-     * max velocity. The theoretically maximum velocity is 1185.496525175837 in/s.
+     * max velocity. The theoretically maximum velocity is 61.74461068624151 in/s.
      * Just make sure that your bot can actually reach this maximum velocity. Path following will be detrimentally
      * affected if it is aiming for a velocity not actually possible.
      *
      * The maximum acceleration is somewhat arbitrary and it is recommended that you tweak this yourself based on
      * actual testing. Just set it at a reasonable value and keep increasing until your path following starts
-     * to degrade. As of now, it simply mirrors the velocity, resulting in 1007.6720463994614 in/s/s
+     * to degrade. As of now, it simply mirrors the velocity, resulting in 52.48291908330528 in/s/s
      *
      * Maximum Angular Velocity is calculated as: maximum velocity / trackWidth * (180 / Math.PI) but capped at 360°/s.
      * You are free to raise this on your own if you would like. It is best determined through experimentation.
-     *
-     * WARNING: LearnRoadRunner.com's constant generator has capped the calculated recommended velocity at 90in/s.
-     * This message is showing because your gear ratio/motor RPM/etc. configuration, results in a recommended
-     * velocity (85% of max velocity) exceeding 90in/s.
-     * (Your recommended velocity was 1007.6720463994614in/s)
-     * This is simply insanely fast for an FTC bot and chances are your bot cannot properly reach these speeds.
-     *
-     * Just to be safe, LearnRoadRunner.com has arbitrarily limited your velocity to 90in/s.
-     * You are free to increase it yourself. If you do run into issues, please lower the maximum velocity.
-     *
-     * A documented case of a similar error which served as an impetus for this reasoning can be found here:
-     * https://github.com/acmerobotics/road-runner-quickstart/issues/91
+
      */
-    public static double MAX_VEL = 47;
-    public static double MAX_ACCEL = 90;
-    public static double MAX_ANG_VEL = Math.toRadians(360);
-    public static double MAX_ANG_ACCEL = Math.toRadians(360);
+    public static double MAX_VEL = 52.48291908330528;
+    public static double MAX_ACCEL = 52.48291908330528;
+    public static double MAX_ANG_VEL = Math.toRadians(238.65474285714288);
+    public static double MAX_ANG_ACCEL = Math.toRadians(238.65474285714288);
 
 
     public static double encoderTicksToInches(double ticks) {
