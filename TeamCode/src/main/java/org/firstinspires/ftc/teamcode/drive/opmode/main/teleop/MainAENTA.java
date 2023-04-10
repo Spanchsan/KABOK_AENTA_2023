@@ -30,7 +30,8 @@ public class MainAENTA extends LinearOpMode {
         liftGrab = IntakeConstants.LIFT_GRAB,
         liftPerevorot = IntakeConstants.LIFT_PEREVOROT,
         //қолдың позициясы конусты салудың алдында
-        liftIDlE = IntakeConstants.LIFT_IDLE;
+        liftIDlE = IntakeConstants.LIFT_IDLE,
+        liftThrow = IntakeConstants.LIFT_THROW;
     Thread threadUP = new Thread(this::intakeUP),
             threadDOWN = new Thread(this::intakeDOWN);
     boolean thrWorking = false;
@@ -38,8 +39,8 @@ public class MainAENTA extends LinearOpMode {
         thrWorking = true;
         intakeUP();
         sleep(100);
-        motorLiftL.setTargetPosition(2200);
-        motorLiftR.setTargetPosition(2200);
+        motorLiftL.setTargetPosition(IntakeConstants.HIGH_JUNC);
+        motorLiftR.setTargetPosition(IntakeConstants.HIGH_JUNC);
         motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLiftL.setPower(1);
@@ -55,8 +56,8 @@ public class MainAENTA extends LinearOpMode {
         thrWorking = true;
         intakeUP();
         sleep(100);
-        motorLiftL.setTargetPosition(1400);
-        motorLiftR.setTargetPosition(1400);
+        motorLiftL.setTargetPosition(IntakeConstants.MED_JUNC);
+        motorLiftR.setTargetPosition(IntakeConstants.MED_JUNC);
         motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLiftL.setPower(1);
@@ -72,8 +73,8 @@ public class MainAENTA extends LinearOpMode {
         thrWorking = true;
         intakeUP();
         sleep(100);
-        motorLiftL.setTargetPosition(460);
-        motorLiftR.setTargetPosition(460);
+        motorLiftL.setTargetPosition(IntakeConstants.LOW_JUNC);
+        motorLiftR.setTargetPosition(IntakeConstants.LOW_JUNC);
         motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLiftL.setPower(1);
@@ -227,7 +228,7 @@ public class MainAENTA extends LinearOpMode {
         sleep(250);
         servoKrutilka.setPosition(rotatePerevorot);
         sleep(300);
-        setServPosLift(liftIDlE);
+        setServPosLift(liftThrow);
     }
 
     /**

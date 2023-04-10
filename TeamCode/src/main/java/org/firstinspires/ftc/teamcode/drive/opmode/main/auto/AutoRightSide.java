@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.drive.opmode.IntakeConstants;
 import org.firstinspires.ftc.teamcode.util.TagDetector;
 
 /*
@@ -34,14 +35,27 @@ public class AutoRightSide extends LinearOpMode {
 
         batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
         drive.setPoseEstimate(new Pose2d(36, -60, Math.toRadians(90)));
+        //Первая траектория подьехать к junction-у в начале автономоки
         Trajectory traj1= drive.trajectoryBuilder(new Pose2d(36, -60, Math.toRadians(90)))
                 .splineTo(new Vector2d(37, -20), Math.toRadians(90))
+                .addDisplacementMarker(() ->{
+                    //Эти оба фукнции для лифтового механизма, не уверен в работоспособности
+                    //TODO: Проверить если будет возможность
+                    //Поставить arm в позицию
+                    drive.threadUP.start();
+                    //Поднять Лифт на позицию
+                    new Thread(() ->{
+                        drive.changePosLift(IntakeConstants.HIGH_JUNC, 1);
+                    }).start();
+                })
                 .splineTo(new Vector2d(32, -10), Math.toRadians(130))
                 .build();
+        //Отьехать назад к пятиэтажным конусам
         Trajectory traj2 = drive.trajectoryBuilder(traj1.end(), true)
                 .splineTo(new Vector2d(37, -12), Math.toRadians(0))
                 .splineTo(new Vector2d(57, -12), Math.toRadians(0))
                 .build();
+        //Вернуться к junction-у
         Trajectory traj3 = drive.trajectoryBuilder(traj2.end())
                 .splineTo(new Vector2d(37, -12), Math.toRadians(180-1e-6))
                 .splineTo(new Vector2d(32, -10), Math.toRadians(130))
@@ -61,7 +75,6 @@ public class AutoRightSide extends LinearOpMode {
         if (isStopRequested()) return;
 
         drive.followTrajectory(traj1);
-        sleep(2000);
         drive.followTrajectory(traj2);
         sleep(2000);
         drive.followTrajectory(traj3);

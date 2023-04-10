@@ -93,8 +93,12 @@ public class SampleMecanumDrive extends MecanumDrive {
             rotatePerevorot = IntakeConstants.ROTATE_PEREVOROT,
             liftGrab = IntakeConstants.LIFT_GRAB,
             liftPerevorot = IntakeConstants.LIFT_PEREVOROT,
-    //қолдың позициясы конусты салудың алдында
-    liftIDlE = IntakeConstants.LIFT_IDLE;
+        //қолдың позициясы конусты салудың алдында
+        liftIDlE = IntakeConstants.LIFT_IDLE,
+        liftThrow = IntakeConstants.LIFT_THROW;
+
+    public Thread threadUP = new Thread(this::intakeUP),
+            threadDOWN = new Thread(this::intakeDOWN);
 
     public SampleMecanumDrive(HardwareMap hardwareMap) {
         super(kV, kA, kStatic, TRACK_WIDTH, TRACK_WIDTH, LATERAL_MULTIPLIER);
@@ -322,29 +326,7 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
     }
 
-    private void initHardware(HardwareMap hardwareMap){
-        motorLiftL = hardwareMap.get(DcMotorEx.class, "liftL");
-        motorLiftR = hardwareMap.get(DcMotorEx.class,"liftR");
-        servoLiftR = hardwareMap.get(Servo.class, "armR");
-        servoLiftL = hardwareMap.get(Servo.class, "armL");
-        claw = hardwareMap.get(Servo.class, "claw");
-        servoKrutilka = hardwareMap.get(Servo.class, "servoKrutilka");
-        servoEncL = hardwareMap.get(Servo.class, "servoEncL");
-        servoEncR = hardwareMap.get(Servo.class, "servoEncR");
-        servoEncPerp = hardwareMap.get(Servo.class, "servoEncPerp");
-        servoLiftR.setDirection(Servo.Direction.REVERSE);
-        motorLiftR.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        motorLiftR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorLiftL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        motorLiftR.setTargetPositionTolerance(70);
-        motorLiftL.setTargetPositionTolerance(70);
-        motorLiftR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorLiftL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-    }
 
     public void changePosLift(int pos, double power){
         motorLiftL.setTargetPosition(pos);
@@ -374,13 +356,15 @@ public class SampleMecanumDrive extends MecanumDrive {
      * КАБК черт
      */
     public void intakeUP(){
+        //initPOS();
+        //sleep(100);
         claw.setPosition(CLOSE_INTAKE);
         sleep(100);
         setServPosLift(0.35);
-        sleep(150);
+        sleep(250);
         servoKrutilka.setPosition(rotatePerevorot);
-        sleep(400);
-        setServPosLift(liftIDlE);
+        sleep(300);
+        setServPosLift(liftThrow);
     }
 
     /**
@@ -388,7 +372,7 @@ public class SampleMecanumDrive extends MecanumDrive {
      */
     public void intakeDOWN(){
         if(servoLiftL.getPosition() > liftIDlE) {
-            claw.setPosition(0.8);
+            claw.setPosition(0.825);
             setServPosLift(liftIDlE - 0.1);
             sleep(400);
             servoKrutilka.setPosition(rotateGrab);
