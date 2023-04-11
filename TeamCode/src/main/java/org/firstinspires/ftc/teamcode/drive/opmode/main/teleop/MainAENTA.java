@@ -32,10 +32,12 @@ public class MainAENTA extends LinearOpMode {
         //қолдың позициясы конусты салудың алдында
         liftIDlE = IntakeConstants.LIFT_IDLE,
         liftThrow = IntakeConstants.LIFT_THROW;
-    Thread threadUP = new Thread(this::intakeUP),
-            threadDOWN = new Thread(this::intakeDOWN);
+//    Thread threadUP = new Thread(this::intakeUP),
+//            threadDOWN = new Thread(this::intakeDOWN);
+    Runnable runUP = this::intakeUP,
+        runDown = this::intakeDOWN;
     boolean thrWorking = false;
-    Thread threadHighJ = new Thread(() ->{
+    Runnable runHighJ = () ->{
         thrWorking = true;
         intakeUP();
         sleep(100);
@@ -51,41 +53,93 @@ public class MainAENTA extends LinearOpMode {
         motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         thrWorking = false;
-    }),
-    threadMidJ = new Thread(() -> {
-        thrWorking = true;
-        intakeUP();
-        sleep(100);
-        motorLiftL.setTargetPosition(IntakeConstants.MED_JUNC);
-        motorLiftR.setTargetPosition(IntakeConstants.MED_JUNC);
-        motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorLiftL.setPower(1);
-        motorLiftR.setPower(1);
-        while(motorLiftL.isBusy() || motorLiftR.isBusy()) {}
-        motorLiftL.setPower(0);
-        motorLiftR.setPower(0);
-        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        thrWorking = false;
-    }),
-    threadLowJ = new Thread(() -> {
-        thrWorking = true;
-        intakeUP();
-        sleep(100);
-        motorLiftL.setTargetPosition(IntakeConstants.LOW_JUNC);
-        motorLiftR.setTargetPosition(IntakeConstants.LOW_JUNC);
-        motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorLiftL.setPower(1);
-        motorLiftR.setPower(1);
-        while(motorLiftL.isBusy() || motorLiftR.isBusy()) {}
-        motorLiftL.setPower(0);
-        motorLiftR.setPower(0);
-        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        thrWorking = false;
-    });
+    },
+       runMidJ = () -> {
+            thrWorking = true;
+            intakeUP();
+            sleep(100);
+            motorLiftL.setTargetPosition(IntakeConstants.MED_JUNC);
+            motorLiftR.setTargetPosition(IntakeConstants.MED_JUNC);
+            motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorLiftL.setPower(1);
+            motorLiftR.setPower(1);
+            while(motorLiftL.isBusy() || motorLiftR.isBusy()) {}
+            motorLiftL.setPower(0);
+            motorLiftR.setPower(0);
+            motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            thrWorking = false;
+        },
+        runLowJ = () -> {
+            thrWorking = true;
+            intakeUP();
+            sleep(100);
+            motorLiftL.setTargetPosition(IntakeConstants.LOW_JUNC);
+            motorLiftR.setTargetPosition(IntakeConstants.LOW_JUNC);
+            motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorLiftL.setPower(1);
+            motorLiftR.setPower(1);
+            while(motorLiftL.isBusy() || motorLiftR.isBusy()) {}
+            motorLiftL.setPower(0);
+            motorLiftR.setPower(0);
+            motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            thrWorking = false;
+        };
+    Thread threadHighJ, threadMidJ, threadLowJ, threadUp, threadDown;
+//    Thread threadHighJ = new Thread(() ->{
+//        thrWorking = true;
+//        intakeUP();
+//        sleep(100);
+//        motorLiftL.setTargetPosition(IntakeConstants.HIGH_JUNC);
+//        motorLiftR.setTargetPosition(IntakeConstants.HIGH_JUNC);
+//        motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        motorLiftL.setPower(1);
+//        motorLiftR.setPower(1);
+//        while(motorLiftL.isBusy() || motorLiftR.isBusy()) {}
+//        motorLiftL.setPower(0);
+//        motorLiftR.setPower(0);
+//        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        thrWorking = false;
+//    }),
+//    threadMidJ = new Thread(() -> {
+//        thrWorking = true;
+//        intakeUP();
+//        sleep(100);
+//        motorLiftL.setTargetPosition(IntakeConstants.MED_JUNC);
+//        motorLiftR.setTargetPosition(IntakeConstants.MED_JUNC);
+//        motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        motorLiftL.setPower(1);
+//        motorLiftR.setPower(1);
+//        while(motorLiftL.isBusy() || motorLiftR.isBusy()) {}
+//        motorLiftL.setPower(0);
+//        motorLiftR.setPower(0);
+//        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        thrWorking = false;
+//    }),
+//    threadLowJ = new Thread(() -> {
+//        thrWorking = true;
+//        intakeUP();
+//        sleep(100);
+//        motorLiftL.setTargetPosition(IntakeConstants.LOW_JUNC);
+//        motorLiftR.setTargetPosition(IntakeConstants.LOW_JUNC);
+//        motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        motorLiftL.setPower(1);
+//        motorLiftR.setPower(1);
+//        while(motorLiftL.isBusy() || motorLiftR.isBusy()) {}
+//        motorLiftL.setPower(0);
+//        motorLiftR.setPower(0);
+//        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        thrWorking = false;
+//    });
 
 
     @Override
@@ -119,7 +173,6 @@ public class MainAENTA extends LinearOpMode {
                     motorFR.setPower(-0.5);
                     motorBR.setPower(-0.5);
                 }
-
                 telemetry.addLine(String.valueOf(frontLeftPower));
                 telemetry.addLine(String.valueOf(backLeftPower));
                 telemetry.addLine(String.valueOf(frontRightPower));
@@ -160,7 +213,7 @@ public class MainAENTA extends LinearOpMode {
                     motorLiftR.setPower(0);
                 }
 
-                if(!thrWorking && distanceSensor.getDistance(DistanceUnit.CM) < 1.5 && motorLiftL.getCurrentPosition() != 0 && motorLiftR.getCurrentPosition() != 0){
+                if(!thrWorking && distanceSensor.getDistance(DistanceUnit.CM) < 2.5 && motorLiftL.getCurrentPosition() != 0 && motorLiftR.getCurrentPosition() != 0){
                     motorLiftR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     motorLiftL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -168,14 +221,26 @@ public class MainAENTA extends LinearOpMode {
 
                 }
                 if(gamepad2.y) {
-                    if (!threadHighJ.isAlive())
+//                    if (!threadHighJ.isAlive())
+//                        threadHighJ.start();
+                    if(threadHighJ == null || !threadHighJ.isAlive()){
+                        threadHighJ = new Thread(runHighJ);
                         threadHighJ.start();
+                    }
                 } else if(gamepad2.x){
-                    if(!threadMidJ.isAlive())
+//                    if(!threadMidJ.isAlive())
+//                        threadMidJ.start();
+                    if(threadMidJ == null || !threadMidJ.isAlive()){
+                        threadMidJ = new Thread(runMidJ);
                         threadMidJ.start();
+                    }
                 } else if(gamepad2.a){
-                    if(!threadLowJ.isAlive())
+//                    if(!threadLowJ.isAlive())
+//                        threadLowJ.start();
+                    if(threadLowJ == null || !threadLowJ.isAlive()){
+                        threadLowJ = new Thread(runLowJ);
                         threadLowJ.start();
+                    }
                 }
                 if(gamepad1.x){
                     servoKrutilka.setPosition(rotateGrab);
@@ -187,14 +252,22 @@ public class MainAENTA extends LinearOpMode {
                     setServPosLift(liftPerevorot);
                 } else if(gamepad2.left_trigger > 0.3) {
                     //GRAB
-                    setServPosLift(liftGrab);
+                    setServPosLift(liftThrow);
                 }
                 if(gamepad2.right_stick_button){
-                    if(!threadUP.isAlive())
-                        threadUP.start();
+//                    if(!threadUP.isAlive())
+//                        threadUP.start();
+                    if(threadUp == null || !threadUp.isAlive()){
+                        threadUp = new Thread(runUP);
+                        threadUp.start();
+                    }
                 } else if(gamepad2.b){
-                    if(!threadDOWN.isAlive())
-                        threadDOWN.start();
+//                    if(!threadDOWN.isAlive())
+//                        threadDOWN.start();
+                    if(threadDown == null || !threadDown.isAlive()){
+                        threadDown = new Thread(runDown);
+                        threadDown.start();
+                    }
                 }
                 if(gamepad2.left_bumper || gamepad1.left_bumper){
                     telemetry.addLine("LEft BMPER");
@@ -308,7 +381,10 @@ public class MainAENTA extends LinearOpMode {
      * БОЧН ЧОРТ
      */
     private void initStart(){
-        threadDOWN.start();
+        if(threadDown == null || !threadDown.isAlive()){
+            threadDown = new Thread(runDown);
+            threadDown.start();
+        }
         servoEnc1.setPosition(0);
         servoEnc2.setPosition(1);
     }
