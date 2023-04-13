@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.drive;
 
 import androidx.annotation.NonNull;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.localization.TwoTrackingWheelLocalizer;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -32,16 +33,17 @@ import java.util.List;
  *    \--------------/
  *
  */
+@Config
 public class TwoWheelTrackingLocalizer extends TwoTrackingWheelLocalizer {
     public static double TICKS_PER_REV = 8192;
     public static double WHEEL_RADIUS = 0.98; // in
     public static double GEAR_RATIO = 1; // output (wheel) speed / input (encoder) speed
 
-    public static double PARALLEL_X = 3.937; // X is the up and down direction
-    public static double PARALLEL_Y = 2.36; // Y is the strafe direction
+    public static double PARALLEL_X = 1.77; // X is the up and down direction
+    public static double PARALLEL_Y = 2.4; // Y is the strafe direction
 
-    public static double PERPENDICULAR_X = 6.3;
-    public static double PERPENDICULAR_Y = 0.4;
+    public static double PERPENDICULAR_X = 3.965;
+    public static double PERPENDICULAR_Y = 0.82;
 
     public static double X_MULTIPLIER = 1; // Multiplier in the X direction
     public static double Y_MULTIPLIER = 1; // Multiplier in the Y direction
@@ -59,12 +61,12 @@ public class TwoWheelTrackingLocalizer extends TwoTrackingWheelLocalizer {
         ));
 
         this.drive = drive;
-
         parallelEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "encParl"));
-        perpendicularEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "encPerp    "));
+        perpendicularEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "encPerp"));
 
         // TODO: reverse any encoders using Encoder.setDirection(Encoder.Direction.REVERSE)
         parallelEncoder.setDirection(Encoder.Direction.REVERSE);
+        //perpendicularEncoder.setDirection(Encoder.Direction.REVERSE);
     }
 
     public static double encoderTicksToInches(double ticks) {

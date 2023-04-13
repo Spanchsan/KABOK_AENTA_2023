@@ -63,8 +63,8 @@ import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
  */
 @Config
 public class SampleMecanumDrive extends MecanumDrive {
-    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(5, 0, 0);
-    public static PIDCoefficients HEADING_PID = new PIDCoefficients(2, 0, 0);
+    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(0.05, 0, 0);
+    public static PIDCoefficients HEADING_PID = new PIDCoefficients(7.5, 0, 0);
 
     public static double LATERAL_MULTIPLIER = 1.15;
     public static double VX_WEIGHT = 1;
@@ -80,8 +80,8 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     private DcMotorEx leftFront, leftRear, rightRear, rightFront;
     DcMotorEx motorLiftL, motorLiftR;
-    Servo servoLiftR, servoLiftL, servoKrutilka, claw,
-            servoEncL, servoEncR, servoEncPerp;
+    public Servo servoLiftR, servoLiftL, servoKrutilka, claw;
+    public DistanceSensor distanceSensor;
     private List<DcMotorEx> motors;
 
     private IMU imu;
@@ -97,8 +97,8 @@ public class SampleMecanumDrive extends MecanumDrive {
         liftIDlE = IntakeConstants.LIFT_IDLE,
         liftThrow = IntakeConstants.LIFT_THROW;
 
-    public Thread threadUP = new Thread(this::intakeUP),
-            threadDOWN = new Thread(this::intakeDOWN);
+    public Runnable runUP = this::intakeUP,
+            runDown = this::intakeDOWN;
 
     public SampleMecanumDrive(HardwareMap hardwareMap) {
         super(kV, kA, kStatic, TRACK_WIDTH, TRACK_WIDTH, LATERAL_MULTIPLIER);
@@ -126,6 +126,27 @@ public class SampleMecanumDrive extends MecanumDrive {
         leftRear = hardwareMap.get(DcMotorEx.class, "leftR");
         rightRear = hardwareMap.get(DcMotorEx.class, "rightR");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightF");
+
+        motorLiftL = hardwareMap.get(DcMotorEx.class, "liftL");
+        motorLiftR = hardwareMap.get(DcMotorEx.class,"liftR");
+        servoLiftR = hardwareMap.get(Servo.class, "armR");
+        servoLiftL = hardwareMap.get(Servo.class, "armL");
+        claw = hardwareMap.get(Servo.class, "claw");
+        servoKrutilka = hardwareMap.get(Servo.class, "servoKrutilka");
+        servoLiftR.setDirection(Servo.Direction.REVERSE);
+        distanceSensor = hardwareMap.get(DistanceSensor.class, "distanceSensor");
+        motorLiftR.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        motorLiftR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLiftL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        motorLiftR.setTargetPositionTolerance(70);
+        motorLiftL.setTargetPositionTolerance(70);
+        motorLiftR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorLiftL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 
         for (DcMotorEx motor : motors) {
@@ -328,16 +349,19 @@ public class SampleMecanumDrive extends MecanumDrive {
 
 
 
-    public void changePosLift(int pos, double power){
+    public void changePosLift(int pos, double power, Telemetry telemetry){
         motorLiftL.setTargetPosition(pos);
         motorLiftR.setTargetPosition(pos);
         motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLiftL.setPower(power);
         motorLiftR.setPower(power);
-        while(motorLiftL.isBusy() || motorLiftR.isBusy()) {}
-        motorLiftL.setPower(0);
-        motorLiftR.setPower(0);
+        while(motorLiftL.isBusy() || motorLiftR.isBusy()) {
+            telemetry.addLine("LEFT: " + motorLiftL.getCurrentPosition());
+            telemetry.addLine("RIGHT: " + motorLiftR.getCurrentPosition());
+        }
+        motorLiftL.setPower(0.025);
+        motorLiftR.setPower(0.025);
         motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
@@ -345,7 +369,7 @@ public class SampleMecanumDrive extends MecanumDrive {
     /**
      * @param pos Position of the Servo
      */
-    private void setServPosLift(double pos){
+    public void setServPosLift(double pos){
         servoLiftR.setPosition(pos);
         servoLiftL.setPosition(pos);
     }

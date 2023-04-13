@@ -24,61 +24,67 @@ public class AutoRightSide extends LinearOpMode {
 
     private VoltageSensor batteryVoltageSensor;
     private TagDetector detector;
+    private SampleMecanumDrive drive;
 
     @Override
     public void runOpMode() throws InterruptedException {
         Telemetry telemetry = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-        detector = new TagDetector(hardwareMap, telemetry);
-        TagDetector.Tag currTag = TagDetector.Tag.noTag;
+            drive = new SampleMecanumDrive(hardwareMap);
+//        detector = new TagDetector(hardwareMap, telemetry);
+//        TagDetector.Tag currTag = TagDetector.Tag.noTag;
 
         batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
         drive.setPoseEstimate(new Pose2d(36, -60, Math.toRadians(90)));
         //Первая траектория подьехать к junction-у в начале автономоки
         Trajectory traj1= drive.trajectoryBuilder(new Pose2d(36, -60, Math.toRadians(90)))
                 .splineTo(new Vector2d(37, -20), Math.toRadians(90))
-                .addDisplacementMarker(() ->{
-                    //Эти оба фукнции для лифтового механизма, не уверен в работоспособности
-                    //TODO: Проверить если будет возможность
-                    //Поставить arm в позицию
-                    drive.threadUP.start();
-                    //Поднять Лифт на позицию
-                    new Thread(() ->{
-                        drive.changePosLift(IntakeConstants.HIGH_JUNC, 1);
-                    }).start();
-                })
-                .splineTo(new Vector2d(32, -10), Math.toRadians(130))
+                .splineTo(new Vector2d(28, -4), Math.toRadians(130))
                 .build();
         //Отьехать назад к пятиэтажным конусам
         Trajectory traj2 = drive.trajectoryBuilder(traj1.end(), true)
                 .splineTo(new Vector2d(37, -12), Math.toRadians(0))
-                .splineTo(new Vector2d(57, -12), Math.toRadians(0))
+                .build();
+        Trajectory traj21 = drive.trajectoryBuilder(traj2.end(), true)
+                .splineTo(new Vector2d(60, -12), Math.toRadians(0))
                 .build();
         //Вернуться к junction-у
-        Trajectory traj3 = drive.trajectoryBuilder(traj2.end())
+        Trajectory traj3 = drive.trajectoryBuilder(traj21.end())
                 .splineTo(new Vector2d(37, -12), Math.toRadians(180-1e-6))
-                .splineTo(new Vector2d(32, -10), Math.toRadians(130))
                 .build();
-
+        Trajectory traj31 = drive.trajectoryBuilder(traj3.end())
+        .splineTo(new Vector2d(28, -4), Math.toRadians(130))
+                .build();
         //3.5
-        while (!isStopRequested() && !isStarted()){
-            TagDetector.Tag tag = detector.getTag();
-            if(tag != TagDetector.Tag.noTag)
-                currTag = tag;
-            telemetry.addLine("Tag: " + tag.name());
-            telemetry.update();
-            sleep(40);
-        }
+
+//        while (!isStopRequested() && !isStarted()){
+//            TagDetector.Tag tag = detector.getTag();
+//            if(tag != TagDetector.Tag.noTag)
+//                currTag = tag;
+//            telemetry.addLine("Tag: " + tag.name());
+//            telemetry.update();
+//            sleep(40);
+//        }
+        drive.claw.setPosition(IntakeConstants.CLOSE_INTAKE);
+        sleep(1000);
+        drive.setServPosLift(0.42);
         waitForStart();
 
         if (isStopRequested()) return;
 
         drive.followTrajectory(traj1);
+        putCone(telemetry);
         drive.followTrajectory(traj2);
-        sleep(2000);
+        new Thread(() ->{
+            drive.runDown.run();
+            drive.changePosLift(650, 1, telemetry);
+        }).start();
+        drive.followTrajectory(traj21);
+        drive.claw.setPosition(IntakeConstants.CLOSE_INTAKE);
+        sleep(400);
         drive.followTrajectory(traj3);
-
+        drive.followTrajectory(traj31);
+        putCone(telemetry);
 
         Pose2d poseEstimate = drive.getPoseEstimate();
         telemetry.addData("finalX", poseEstimate.getX());
@@ -87,5 +93,15 @@ public class AutoRightSide extends LinearOpMode {
         telemetry.update();
 
         while (!isStopRequested() && opModeIsActive()){}
+    }
+
+    private void putCone(Telemetry telemetry){
+        drive.runUP.run();
+        drive.changePosLift(IntakeConstants.HIGH_JUNC, 1, telemetry);
+        sleep(500);
+        drive.setServPosLift(IntakeConstants.LIFT_PEREVOROT);
+        sleep(300);
+        drive.claw.setPosition(IntakeConstants.OPEN_INTAKE);
+        sleep(500);
     }
 }

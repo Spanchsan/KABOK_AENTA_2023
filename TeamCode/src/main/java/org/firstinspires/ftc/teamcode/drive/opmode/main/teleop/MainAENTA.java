@@ -276,11 +276,24 @@ public class MainAENTA extends LinearOpMode {
                     telemetry.addLine("RIGHT BMPER");
                     claw.setPosition(CLOSE_INTAKE);
                 }
+                if(gamepad1.b){
+                    motorFR.setPower(1);
+                }else if(gamepad1.a){
+                    motorBR.setPower(1);
+                }else if(gamepad1.y){
+                    motorFL.setPower(1);
+                }else if(gamepad1.x){
+                    motorBL.setPower(1);
+                }
                 telemetry.addLine("motorLift Left: " + motorLiftL.getCurrentPosition());
                 telemetry.addLine("motorLift Right: " + motorLiftR.getCurrentPosition());
                 telemetry.addLine("Encoder Parl pos: " + encParl.getCurrentPosition());
                 telemetry.addLine("Encoder Perp pos: " + encPerp.getCurrentPosition());
                 telemetry.addLine("Distance Sensor: " + distanceSensor.getDistance(DistanceUnit.CM));
+                telemetry.addLine("LEFT FRONT: " + motorFL.getCurrentPosition());
+                telemetry.addLine("LEFT REAR: " + motorBL.getCurrentPosition());
+                telemetry.addLine("RIGHT FRONT" + motorFR.getCurrentPosition());
+                telemetry.addLine("RIGHT REAR: " + motorBR.getCurrentPosition());
                 telemetry.update();
             }
         }
