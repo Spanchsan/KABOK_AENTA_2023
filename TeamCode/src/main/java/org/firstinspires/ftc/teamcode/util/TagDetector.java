@@ -16,9 +16,9 @@ public class TagDetector {
     AprilTagDetectionPipeline
             aprilTagDetectionPipeline;
 
-    int LEFT_ID = 17;
-    int MID_ID = 18;
-    int RIGHT_ID = 19;
+    int LEFT_ID = 1;
+    int MID_ID = 2;
+    int RIGHT_ID = 3;
 
     double fx = 578.272;
     double fy = 578.272;

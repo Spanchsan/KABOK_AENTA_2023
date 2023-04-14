@@ -14,12 +14,14 @@ public class MeepMeepTesting{
 
         RoadRunnerBotEntity myBot1 = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
-                .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 13.77).build();
-        myBot1.getDrive().setPoseEstimate(new Pose2d(36, -60, Math.toRadians(90)));
+                .setConstraints(53.2, 53.2, Math.toRadians(241.91), Math.toRadians(241.91), 12.629).build();
+        myBot1.getDrive().setPoseEstimate(new Pose2d(36, -60, Math.toRadians(0)));
         TrajectorySequence traj1 = myBot1.getDrive().
-                trajectorySequenceBuilder(new Pose2d(36, -60, Math.toRadians(90)))
-                .splineTo(new Vector2d(36, -20), Math.toRadians(90))
-                .splineTo(new Vector2d(32, -10), Math.toRadians(130))
+                trajectorySequenceBuilder(new Pose2d(36, -60, Math.toRadians(0)))
+                .setReversed(true)
+                .lineToLinearHeading(new Pose2d(37, -20, Math.toRadians(90)))
+                .setReversed(false)
+                .splineTo(new Vector2d(28, -4), Math.toRadians(130))
                 //to Cone
                 .setReversed(true)
                 .splineTo(new Vector2d(37, -12), Math.toRadians(0))
@@ -27,39 +29,39 @@ public class MeepMeepTesting{
                 //to junction
                 .setReversed(false)
                 .splineTo(new Vector2d(37, -12), Math.toRadians(180-1e-6))
-                .splineTo(new Vector2d(32, -10), Math.toRadians(130))
-                //to Cone
-                .setReversed(true)
-                .splineTo(new Vector2d(37, -12), Math.toRadians(0))
-                .splineTo(new Vector2d(57, -12), Math.toRadians(0))
-                //to junction
-                .setReversed(false)
-                .splineTo(new Vector2d(37, -12), Math.toRadians(180-1e-6))
-                .splineTo(new Vector2d(32, -10), Math.toRadians(130))
-                //to Cone
-                .setReversed(true)
-                .splineTo(new Vector2d(37, -12), Math.toRadians(0))
-                .splineTo(new Vector2d(57, -12), Math.toRadians(0))
-                //to junction
-                .setReversed(false)
-                .splineTo(new Vector2d(37, -12), Math.toRadians(180-1e-6))
-                .splineTo(new Vector2d(32, -10), Math.toRadians(130))
-                //to Cone
-                .setReversed(true)
-                .splineTo(new Vector2d(37, -12), Math.toRadians(0))
-                .splineTo(new Vector2d(57, -12), Math.toRadians(0))
-                //to junction
-                .setReversed(false)
-                .splineTo(new Vector2d(37, -12), Math.toRadians(180-1e-6))
-                .splineTo(new Vector2d(32, -10), Math.toRadians(130))
-                //to Cone
-                .setReversed(true)
-                .splineTo(new Vector2d(37, -12), Math.toRadians(0))
-                .splineTo(new Vector2d(57, -12), Math.toRadians(0))
-                //to junction
-                .setReversed(false)
-                .splineTo(new Vector2d(37, -12), Math.toRadians(180-1e-6))
-                .splineTo(new Vector2d(32, -10), Math.toRadians(130))
+                .splineTo(new Vector2d(28, -4), Math.toRadians(130))
+//                //to Cone
+//                .setReversed(true)
+//                .splineTo(new Vector2d(37, -12), Math.toRadians(0))
+//                .splineTo(new Vector2d(57, -12), Math.toRadians(0))
+//                //to junction
+//                .setReversed(false)
+//                .splineTo(new Vector2d(37, -12), Math.toRadians(180-1e-6))
+//                .splineTo(new Vector2d(32, -10), Math.toRadians(130))
+//                //to Cone
+//                .setReversed(true)
+//                .splineTo(new Vector2d(37, -12), Math.toRadians(0))
+//                .splineTo(new Vector2d(57, -12), Math.toRadians(0))
+//                //to junction
+//                .setReversed(false)
+//                .splineTo(new Vector2d(37, -12), Math.toRadians(180-1e-6))
+//                .splineTo(new Vector2d(32, -10), Math.toRadians(130))
+//                //to Cone
+//                .setReversed(true)
+//                .splineTo(new Vector2d(37, -12), Math.toRadians(0))
+//                .splineTo(new Vector2d(57, -12), Math.toRadians(0))
+//                //to junction
+//                .setReversed(false)
+//                .splineTo(new Vector2d(37, -12), Math.toRadians(180-1e-6))
+//                .splineTo(new Vector2d(32, -10), Math.toRadians(130))
+//                //to Cone
+//                .setReversed(true)
+//                .splineTo(new Vector2d(37, -12), Math.toRadians(0))
+//                .splineTo(new Vector2d(57, -12), Math.toRadians(0))
+//                //to junction
+//                .setReversed(false)
+//                .splineTo(new Vector2d(37, -12), Math.toRadians(180-1e-6))
+//                .splineTo(new Vector2d(32, -10), Math.toRadians(130))
                 //leftx
                 .setReversed(true)
                 .splineTo(new Vector2d(37, -12), Math.toRadians(0))

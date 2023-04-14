@@ -89,58 +89,6 @@ public class MainAENTA extends LinearOpMode {
             thrWorking = false;
         };
     Thread threadHighJ, threadMidJ, threadLowJ, threadUp, threadDown;
-//    Thread threadHighJ = new Thread(() ->{
-//        thrWorking = true;
-//        intakeUP();
-//        sleep(100);
-//        motorLiftL.setTargetPosition(IntakeConstants.HIGH_JUNC);
-//        motorLiftR.setTargetPosition(IntakeConstants.HIGH_JUNC);
-//        motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        motorLiftL.setPower(1);
-//        motorLiftR.setPower(1);
-//        while(motorLiftL.isBusy() || motorLiftR.isBusy()) {}
-//        motorLiftL.setPower(0);
-//        motorLiftR.setPower(0);
-//        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        thrWorking = false;
-//    }),
-//    threadMidJ = new Thread(() -> {
-//        thrWorking = true;
-//        intakeUP();
-//        sleep(100);
-//        motorLiftL.setTargetPosition(IntakeConstants.MED_JUNC);
-//        motorLiftR.setTargetPosition(IntakeConstants.MED_JUNC);
-//        motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        motorLiftL.setPower(1);
-//        motorLiftR.setPower(1);
-//        while(motorLiftL.isBusy() || motorLiftR.isBusy()) {}
-//        motorLiftL.setPower(0);
-//        motorLiftR.setPower(0);
-//        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        thrWorking = false;
-//    }),
-//    threadLowJ = new Thread(() -> {
-//        thrWorking = true;
-//        intakeUP();
-//        sleep(100);
-//        motorLiftL.setTargetPosition(IntakeConstants.LOW_JUNC);
-//        motorLiftR.setTargetPosition(IntakeConstants.LOW_JUNC);
-//        motorLiftL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        motorLiftR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        motorLiftL.setPower(1);
-//        motorLiftR.setPower(1);
-//        while(motorLiftL.isBusy() || motorLiftR.isBusy()) {}
-//        motorLiftL.setPower(0);
-//        motorLiftR.setPower(0);
-//        motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        thrWorking = false;
-//    });
-
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -213,7 +161,7 @@ public class MainAENTA extends LinearOpMode {
                     motorLiftR.setPower(0);
                 }
 
-                if(!thrWorking && distanceSensor.getDistance(DistanceUnit.CM) < 2.5 && motorLiftL.getCurrentPosition() != 0 && motorLiftR.getCurrentPosition() != 0){
+                if(!thrWorking && distanceSensor.getDistance(DistanceUnit.CM) < 5.5 && motorLiftL.getCurrentPosition() != 0 && motorLiftR.getCurrentPosition() != 0){
                     motorLiftR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     motorLiftL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -221,22 +169,16 @@ public class MainAENTA extends LinearOpMode {
 
                 }
                 if(gamepad2.y) {
-//                    if (!threadHighJ.isAlive())
-//                        threadHighJ.start();
                     if(threadHighJ == null || !threadHighJ.isAlive()){
                         threadHighJ = new Thread(runHighJ);
                         threadHighJ.start();
                     }
                 } else if(gamepad2.x){
-//                    if(!threadMidJ.isAlive())
-//                        threadMidJ.start();
                     if(threadMidJ == null || !threadMidJ.isAlive()){
                         threadMidJ = new Thread(runMidJ);
                         threadMidJ.start();
                     }
                 } else if(gamepad2.a){
-//                    if(!threadLowJ.isAlive())
-//                        threadLowJ.start();
                     if(threadLowJ == null || !threadLowJ.isAlive()){
                         threadLowJ = new Thread(runLowJ);
                         threadLowJ.start();
@@ -255,15 +197,11 @@ public class MainAENTA extends LinearOpMode {
                     setServPosLift(liftThrow);
                 }
                 if(gamepad2.right_stick_button){
-//                    if(!threadUP.isAlive())
-//                        threadUP.start();
                     if(threadUp == null || !threadUp.isAlive()){
                         threadUp = new Thread(runUP);
                         threadUp.start();
                     }
                 } else if(gamepad2.b){
-//                    if(!threadDOWN.isAlive())
-//                        threadDOWN.start();
                     if(threadDown == null || !threadDown.isAlive()){
                         threadDown = new Thread(runDown);
                         threadDown.start();
@@ -294,6 +232,7 @@ public class MainAENTA extends LinearOpMode {
                 telemetry.addLine("LEFT REAR: " + motorBL.getCurrentPosition());
                 telemetry.addLine("RIGHT FRONT" + motorFR.getCurrentPosition());
                 telemetry.addLine("RIGHT REAR: " + motorBR.getCurrentPosition());
+
                 telemetry.update();
             }
         }
@@ -308,6 +247,7 @@ public class MainAENTA extends LinearOpMode {
     private void intakeUP(){
         //initPOS();
         //sleep(100);
+        if(servoLiftL.getPosition() == liftThrow) return;
         claw.setPosition(CLOSE_INTAKE);
         sleep(100);
         setServPosLift(0.35);

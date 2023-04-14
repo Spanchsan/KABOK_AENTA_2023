@@ -22,7 +22,7 @@ import org.firstinspires.ftc.teamcode.util.TagDetector;
  */
 @Config
 @Autonomous(group = "drive")
-public class AutoRightSide extends LinearOpMode {
+public class AutoRightSideAcc extends LinearOpMode {
 
     private VoltageSensor batteryVoltageSensor;
     private TagDetector detector;
@@ -32,14 +32,16 @@ public class AutoRightSide extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         Telemetry telemetry = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
 
-            drive = new SampleMecanumDrive(hardwareMap);
-//        detector = new TagDetector(hardwareMap, telemetry);
-//        TagDetector.Tag currTag = TagDetector.Tag.noTag;
+        drive = new SampleMecanumDrive(hardwareMap);
+        detector = new TagDetector(hardwareMap, telemetry);
+        TagDetector.Tag currTag = TagDetector.Tag.noTag;
 
         batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
         drive.setPoseEstimate(new Pose2d(36, -60, Math.toRadians(90)));
         //Первая траектория подьехать к junction-у в начале автономоки
         Vector2d poseForCone = new Vector2d(29.5, -4.5);
+        Vector2d poseForCone1 = new Vector2d(28.5, -5);
+        int velToCone = 25;
         Trajectory traj1= drive.trajectoryBuilder(new Pose2d(36, -60, Math.toRadians(90)))
                 .splineTo(new Vector2d(37, -20), Math.toRadians(90))
                 .splineTo(poseForCone, Math.toRadians(130),
@@ -51,17 +53,17 @@ public class AutoRightSide extends LinearOpMode {
                         drive.intakeUP();
                     }).start();
                     new Thread(() -> {
-                        drive.changePosLift(IntakeConstants.HIGH_JUNC, 1, telemetry);
+                        drive.changePosLift(IntakeConstants.HIGH_JUNC + 65, 1, telemetry);
                     }).start();
                 })
                 .build();
         //Отьехать назад к пятиэтажным конусам
         Trajectory trajToCon = drive.trajectoryBuilder(traj1.end(), true)
                 .splineTo(new Vector2d(37, -12), Math.toRadians(0),
-                        SampleMecanumDrive.getVelocityConstraint(15, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        SampleMecanumDrive.getVelocityConstraint(velToCone, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL))
-                .splineTo(new Vector2d(62, -12), Math.toRadians(0),
-                        SampleMecanumDrive.getVelocityConstraint(15, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                .splineTo(new Vector2d(60.5, -12), Math.toRadians(0),
+                        SampleMecanumDrive.getVelocityConstraint(velToCone, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL))
                 .addDisplacementMarker(1.5, () ->{
                     new Thread(() -> {
@@ -72,79 +74,121 @@ public class AutoRightSide extends LinearOpMode {
                 .build();
         Trajectory trajToCon2 = drive.trajectoryBuilder(traj1.end(), true)
                 .splineTo(new Vector2d(37, -12), Math.toRadians(0),
-                        SampleMecanumDrive.getVelocityConstraint(15, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        SampleMecanumDrive.getVelocityConstraint(velToCone, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL))
-                .splineTo(new Vector2d(62, -12), Math.toRadians(0),
-                        SampleMecanumDrive.getVelocityConstraint(15, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                .splineTo(new Vector2d(60.5, -12), Math.toRadians(0),
+                        SampleMecanumDrive.getVelocityConstraint(velToCone, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL))
                 .addDisplacementMarker(1.5, () ->{
                     new Thread(() -> {
                         drive.intakeDOWN();
                     }).start();
-                    new Thread(() -> drive.changePosLift(480, 1, telemetry)).start();
+                    new Thread(() -> drive.changePosLift(460, 1, telemetry)).start();
+                })
+                .build();
+        Trajectory trajToCon3 = drive.trajectoryBuilder(traj1.end(), true)
+                .splineTo(new Vector2d(37, -12), Math.toRadians(0),
+                        SampleMecanumDrive.getVelocityConstraint(velToCone, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL))
+                .splineTo(new Vector2d(59, -12), Math.toRadians(0),
+                        SampleMecanumDrive.getVelocityConstraint(velToCone, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL))
+                .addDisplacementMarker(1.5, () ->{
+                    new Thread(() -> {
+                        drive.intakeDOWN();
+                    }).start();
+                    new Thread(() -> drive.changePosLift(380, 1, telemetry)).start();
+                })
+                .build();
+        Trajectory trajToCon4 = drive.trajectoryBuilder(traj1.end(), true)
+                .splineTo(new Vector2d(37, -12), Math.toRadians(0),
+                        SampleMecanumDrive.getVelocityConstraint(velToCone, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL))
+                .splineTo(new Vector2d(59, -12), Math.toRadians(0),
+                        SampleMecanumDrive.getVelocityConstraint(velToCone, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL))
+                .addDisplacementMarker(1.5, () ->{
+                    new Thread(() -> {
+                        drive.intakeDOWN();
+                    }).start();
+                    new Thread(() -> drive.changePosLift(300, 1, telemetry)).start();
                 })
                 .build();
 //        //Вернуться к junction-у
         Trajectory trajToJunc = drive.trajectoryBuilder(trajToCon.end())
                 .addDisplacementMarker(0.1, () ->{
                     new Thread(() ->
-                            drive.changePosLift(IntakeConstants.HIGH_JUNC + 65, 1, telemetry)).start();
+                            drive.changePosLift(IntakeConstants.HIGH_JUNC + 80, 1, telemetry)).start();
                 }).
                 addDisplacementMarker(1.5, () ->{
                     new Thread(() -> drive.intakeUP()).start();
                 })
-                .splineTo(new Vector2d(37, -12), Math.toRadians(180-1e-6))
-                .splineTo(poseForCone, Math.toRadians(130),
+                .splineTo(new Vector2d(39, -12), Math.toRadians(180-1e-6))
+                .splineTo(poseForCone1, Math.toRadians(132),
                         SampleMecanumDrive.getVelocityConstraint(25, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(25))
                 .build();
         //3.5
-
-//        while (!isStopRequested() && !isStarted()){
-//            TagDetector.Tag tag = detector.getTag();
-//            if(tag != TagDetector.Tag.noTag)
-//                currTag = tag;
-//            telemetry.addLine("Tag: " + tag.name());
-//            telemetry.update();
-//            sleep(40);
-//        }
         drive.claw.setPosition(IntakeConstants.CLOSE_INTAKE);
         sleep(1000);
         drive.setServPosLift(0.42);
+        while (!isStopRequested() && !isStarted()){
+            TagDetector.Tag tag = detector.getTag();
+            if(tag != TagDetector.Tag.noTag)
+                currTag = tag;
+            telemetry.addLine("Tag: " + tag.name());
+            telemetry.update();
+            sleep(40);
+        }
         waitForStart();
 
         if (isStopRequested()) return;
 
         drive.followTrajectory(traj1);
-        sleep(500);
         putCone();
         drive.followTrajectory(trajToCon);
-        sleep(300);
         drive.claw.setPosition(IntakeConstants.CLOSE_INTAKE);
         sleep(300);
         drive.followTrajectory(trajToJunc);
-        sleep(500);
         putCone();
         drive.followTrajectory(trajToCon2);
-        sleep(300);
         drive.claw.setPosition(IntakeConstants.CLOSE_INTAKE);
         sleep(300);
         drive.followTrajectory(trajToJunc);
-        sleep(500);
         putCone();
-
-//        drive.followTrajectory(trajToCon1);
-////        new Thread(() ->{
-////            drive.runDown.run();
-////            drive.changePosLift(650, 1, telemetry);
-////        }).start();
-//        drive.followTrajectory(trajToCon2);
-//        //drive.claw.setPosition(IntakeConstants.CLOSE_INTAKE);
-//        sleep(400);
-//        drive.followTrajectory(traj3);
-//        drive.followTrajectory(traj31);
-        //putCone(telemetry);
-
+        drive.followTrajectory(trajToCon3);
+        drive.claw.setPosition(IntakeConstants.CLOSE_INTAKE);
+        sleep(300);
+        drive.followTrajectory(trajToJunc);
+        putCone();
+        drive.followTrajectory(trajToCon4);
+        drive.claw.setPosition(IntakeConstants.CLOSE_INTAKE);
+        sleep(300);
+        drive.followTrajectory(trajToJunc);
+        putCone();
+        new Thread(() ->
+                drive.changePosLift(0, 1, telemetry)).start();
+        new Thread(() -> drive.intakeDOWN()).start();
+        if(currTag == TagDetector.Tag.left){
+            Trajectory trajPark1 = drive.trajectoryBuilder(trajToJunc.end(), true).
+                    splineTo(new Vector2d(30, -12), Math.toRadians(0))
+                    .build();
+            Trajectory trajPark2 = drive.trajectoryBuilder(trajToJunc.end())
+                    .splineTo(new Vector2d(12, -12), Math.toRadians(180-1e-6))
+                    .build();
+            drive.followTrajectory(trajPark1);
+            drive.followTrajectory(trajPark2);
+        } else if(currTag == TagDetector.Tag.mid){
+            Trajectory trajPark1 = drive.trajectoryBuilder(trajToJunc.end(), true).
+                    splineTo(new Vector2d(36, -12), Math.toRadians(0))
+                    .build();
+            drive.followTrajectory(trajPark1);
+        } else {
+            Trajectory trajPark1 = drive.trajectoryBuilder(trajToJunc.end(), true).
+                    splineTo(new Vector2d(58, -12), Math.toRadians(0))
+                    .build();
+            drive.followTrajectory(trajPark1);
+        }
         Pose2d poseEstimate = drive.getPoseEstimate();
         telemetry.addData("finalX", poseEstimate.getX());
         telemetry.addData("finalY", poseEstimate.getY());
@@ -160,10 +204,10 @@ public class AutoRightSide extends LinearOpMode {
     }
 
     private void putCone(){
-        sleep(500);
+        sleep(150);
         drive.setServPosLift(IntakeConstants.LIFT_PEREVOROT);
-        sleep(300);
+        sleep(120);
         drive.claw.setPosition(IntakeConstants.OPEN_INTAKE);
-        sleep(500);
+        sleep(200);
     }
 }
