@@ -25,13 +25,13 @@ public class MainAENTA extends LinearOpMode {
 
     final double CLOSE_INTAKE = IntakeConstants.CLOSE_INTAKE,
             OPEN_INTAKE = IntakeConstants.OPEN_INTAKE,
-        rotateGrab = IntakeConstants.ROTATE_GRAB,
-        rotatePerevorot = IntakeConstants.ROTATE_PEREVOROT,
-        liftGrab = IntakeConstants.LIFT_GRAB,
-        liftPerevorot = IntakeConstants.LIFT_PEREVOROT,
-        //қолдың позициясы конусты салудың алдында
-        liftIDlE = IntakeConstants.LIFT_IDLE,
-        liftThrow = IntakeConstants.LIFT_THROW;
+            rotateGrab = IntakeConstants.ROTATE_GRAB,
+            rotatePerevorot = IntakeConstants.ROTATE_PEREVOROT,
+            liftGrab = IntakeConstants.LIFT_GRAB,
+            liftPerevorot = IntakeConstants.LIFT_PEREVOROT,
+    //қолдың позициясы конусты салудың алдында
+    liftIDlE = IntakeConstants.LIFT_IDLE,
+            liftThrow = IntakeConstants.LIFT_THROW;
 //    Thread threadUP = new Thread(this::intakeUP),
 //            threadDOWN = new Thread(this::intakeDOWN);
     Runnable runUP = this::intakeUP,
@@ -39,7 +39,7 @@ public class MainAENTA extends LinearOpMode {
     boolean thrWorking = false;
     Runnable runHighJ = () ->{
         thrWorking = true;
-        intakeUP();
+        new Thread(this::intakeUP).start();
         sleep(100);
         motorLiftL.setTargetPosition(IntakeConstants.HIGH_JUNC);
         motorLiftR.setTargetPosition(IntakeConstants.HIGH_JUNC);
@@ -56,7 +56,7 @@ public class MainAENTA extends LinearOpMode {
     },
        runMidJ = () -> {
             thrWorking = true;
-            intakeUP();
+            new Thread(this::intakeUP).start();
             sleep(100);
             motorLiftL.setTargetPosition(IntakeConstants.MED_JUNC);
             motorLiftR.setTargetPosition(IntakeConstants.MED_JUNC);
@@ -73,7 +73,7 @@ public class MainAENTA extends LinearOpMode {
         },
         runLowJ = () -> {
             thrWorking = true;
-            intakeUP();
+            new Thread(this::intakeUP).start();
             sleep(100);
             motorLiftL.setTargetPosition(IntakeConstants.LOW_JUNC);
             motorLiftR.setTargetPosition(IntakeConstants.LOW_JUNC);
@@ -144,8 +144,8 @@ public class MainAENTA extends LinearOpMode {
                     } else if (motorLiftL.getCurrentPosition() > 100 && motorLiftR.getCurrentPosition() > 100 && !thrWorking) {
                         motorLiftL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                         motorLiftR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                        motorLiftL.setPower(0.0025);
-                        motorLiftR.setPower(0.0025);
+                        motorLiftL.setPower(0.004);
+                        motorLiftR.setPower(0.004);
                     } else if(!thrWorking){
                         motorLiftL.setPower(0);
                         motorLiftR.setPower(0);
@@ -214,19 +214,8 @@ public class MainAENTA extends LinearOpMode {
                     telemetry.addLine("RIGHT BMPER");
                     claw.setPosition(CLOSE_INTAKE);
                 }
-                if(gamepad1.b){
-                    motorFR.setPower(1);
-                }else if(gamepad1.a){
-                    motorBR.setPower(1);
-                }else if(gamepad1.y){
-                    motorFL.setPower(1);
-                }else if(gamepad1.x){
-                    motorBL.setPower(1);
-                }
                 telemetry.addLine("motorLift Left: " + motorLiftL.getCurrentPosition());
                 telemetry.addLine("motorLift Right: " + motorLiftR.getCurrentPosition());
-                telemetry.addLine("Encoder Parl pos: " + encParl.getCurrentPosition());
-                telemetry.addLine("Encoder Perp pos: " + encPerp.getCurrentPosition());
                 telemetry.addLine("Distance Sensor: " + distanceSensor.getDistance(DistanceUnit.CM));
                 telemetry.addLine("LEFT FRONT: " + motorFL.getCurrentPosition());
                 telemetry.addLine("LEFT REAR: " + motorBL.getCurrentPosition());
@@ -247,7 +236,6 @@ public class MainAENTA extends LinearOpMode {
     private void intakeUP(){
         //initPOS();
         //sleep(100);
-        if(servoLiftL.getPosition() == liftThrow) return;
         claw.setPosition(CLOSE_INTAKE);
         sleep(100);
         setServPosLift(0.35);
@@ -262,7 +250,7 @@ public class MainAENTA extends LinearOpMode {
      */
     private void intakeDOWN(){
         if(servoLiftL.getPosition() > liftIDlE) {
-            claw.setPosition(0.825);
+            claw.setPosition(0.68);
             setServPosLift(liftIDlE - 0.1);
             sleep(400);
             servoKrutilka.setPosition(rotateGrab);
@@ -291,17 +279,9 @@ public class MainAENTA extends LinearOpMode {
         servoLiftL = hardwareMap.get(Servo.class, "armL");
         claw = hardwareMap.get(Servo.class, "claw");
         servoKrutilka = hardwareMap.get(Servo.class, "servoKrutilka");
-        servoEnc1 = hardwareMap.get(Servo.class, "servoEnc1");
-        servoEnc2 = hardwareMap.get(Servo.class, "servoEnc2");
-
-        encPerp = new Encoder(hardwareMap.get(DcMotorEx.class, "encPerp"));
-        encParl = new Encoder(hardwareMap.get(DcMotorEx.class, "encParl"));
-
+        //servoLiftR.setDirection(Servo.Direction.REVERSE);
+        servoLiftL.setDirection(Servo.Direction.REVERSE);
         distanceSensor = hardwareMap.get(DistanceSensor.class, "distanceSensor");
-
-        servoLiftR.setDirection(Servo.Direction.REVERSE);
-        motorFL.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorBL.setDirection(DcMotorSimple.Direction.REVERSE);
         motorLiftR.setDirection(DcMotorSimple.Direction.REVERSE);
 
         motorLiftR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -311,13 +291,17 @@ public class MainAENTA extends LinearOpMode {
 
         motorLiftR.setTargetPositionTolerance(70);
         motorLiftL.setTargetPositionTolerance(70);
+        motorLiftR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorLiftL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        servoEnc1 = hardwareMap.get(Servo.class, "servoEnc1");
+        servoEnc2 = hardwareMap.get(Servo.class, "servoEnc2");
+        motorFL.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorBL.setDirection(DcMotorSimple.Direction.REVERSE);
 
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorLiftR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorLiftL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     /**

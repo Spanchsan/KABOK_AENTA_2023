@@ -80,7 +80,7 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     private DcMotorEx leftFront, leftRear, rightRear, rightFront;
     DcMotorEx motorLiftL, motorLiftR;
-    public Servo servoLiftR, servoLiftL, servoKrutilka, claw;
+    public Servo servoLiftR, servoLiftL, servoKrutilka, claw, servoEnc1, servoEnc2;
     public DistanceSensor distanceSensor;
     private List<DcMotorEx> motors;
 
@@ -133,7 +133,7 @@ public class SampleMecanumDrive extends MecanumDrive {
         servoLiftL = hardwareMap.get(Servo.class, "armL");
         claw = hardwareMap.get(Servo.class, "claw");
         servoKrutilka = hardwareMap.get(Servo.class, "servoKrutilka");
-        servoLiftR.setDirection(Servo.Direction.REVERSE);
+        servoLiftL.setDirection(Servo.Direction.REVERSE);
         distanceSensor = hardwareMap.get(DistanceSensor.class, "distanceSensor");
         motorLiftR.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -146,6 +146,8 @@ public class SampleMecanumDrive extends MecanumDrive {
         motorLiftL.setTargetPositionTolerance(70);
         motorLiftR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorLiftL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        servoEnc1 = hardwareMap.get(Servo.class, "servoEnc1");
+        servoEnc2 = hardwareMap.get(Servo.class, "servoEnc2");
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 

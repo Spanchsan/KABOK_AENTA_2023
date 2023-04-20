@@ -23,14 +23,14 @@ import org.firstinspires.ftc.teamcode.util.TagDetector;
  */
 @Config
 @Autonomous(group = "drive")
-public class AutoRightSideAcc extends LinearOpMode {
+public class AutoLeftSideAcc extends LinearOpMode {
 
     private VoltageSensor batteryVoltageSensor;
     private TagDetector detector;
     private SampleMecanumDrive drive;
     int velToCone = 38;
-    Vector2d poseForCone = new Vector2d(29, -5.5);
-    Vector2d poseForCone1 = new Vector2d(29, -5.5);
+    Vector2d poseForCone = new Vector2d(-29.5, -4.5);
+    Vector2d poseForCone1 = new Vector2d(-29, -5.5);
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -41,11 +41,11 @@ public class AutoRightSideAcc extends LinearOpMode {
         TagDetector.Tag currTag = TagDetector.Tag.noTag;
 
         batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
-        drive.setPoseEstimate(new Pose2d(36, -60, Math.toRadians(90)));
+        drive.setPoseEstimate(new Pose2d(-36, -60, Math.toRadians(90)));
         //Первая траектория подьехать к junction-у в начале автономоки
-        Trajectory traj1= drive.trajectoryBuilder(new Pose2d(36, -60, Math.toRadians(90)))
-                .splineTo(new Vector2d(37, -20), Math.toRadians(90))
-                .splineTo(poseForCone1, Math.toRadians(132),
+        Trajectory traj1= drive.trajectoryBuilder(new Pose2d(-36, -60, Math.toRadians(90)))
+                .splineTo(new Vector2d(-37, -20), Math.toRadians(90))
+                .splineTo(poseForCone1, Math.toRadians(48),
                         SampleMecanumDrive.getVelocityConstraint(25, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(25))
                 .addDisplacementMarker(1.5, () ->{
@@ -181,21 +181,21 @@ public class AutoRightSideAcc extends LinearOpMode {
         new Thread(() -> drive.intakeDOWN()).start();
         if(currTag == TagDetector.Tag.left){
             Trajectory trajPark1 = drive.trajectoryBuilder(trajToJunc3.end(), true).
-                    splineTo(new Vector2d(29, -12), Math.toRadians(0))
+                    splineTo(new Vector2d(-29, -12), Math.toRadians(180-1e-6))
                     .build();
             Trajectory trajPark2 = drive.trajectoryBuilder(trajPark1.end())
-                    .splineTo(new Vector2d(10.5, -12), Math.toRadians(180-1e-6))
+                    .splineTo(new Vector2d(-10.5, -12), Math.toRadians(0))
                     .build();
             drive.followTrajectory(trajPark1);
             drive.followTrajectory(trajPark2);
         } else if(currTag == TagDetector.Tag.mid){
             Trajectory trajPark1 = drive.trajectoryBuilder(trajToJunc3.end(), true).
-                    splineTo(new Vector2d(32, -12), Math.toRadians(0))
+                    splineTo(new Vector2d(-32, -12), Math.toRadians(180-1e-6))
                     .build();
             drive.followTrajectory(trajPark1);
         } else {
             Trajectory trajPark1 = drive.trajectoryBuilder(trajToJunc3.end(), true).
-                    splineTo(new Vector2d(58, -12), Math.toRadians(0))
+                    splineTo(new Vector2d(-58, -12), Math.toRadians(180-1e-6))
                     .build();
             drive.followTrajectory(trajPark1);
         }
@@ -210,10 +210,10 @@ public class AutoRightSideAcc extends LinearOpMode {
 
     private Trajectory getToConTraj(Pose2d pose, int lift){
         Trajectory trajToCon = drive.trajectoryBuilder(pose, true)
-                .splineTo(new Vector2d(37, -14), Math.toRadians(0),
+                .splineTo(new Vector2d(-37, -14), Math.toRadians(180-1e-6),
                         SampleMecanumDrive.getVelocityConstraint(velToCone, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL))
-                .splineTo(new Vector2d(61.5, -14), Math.toRadians(0),
+                .splineTo(new Vector2d(-61.5, -14), Math.toRadians(180-1e-6),
                         SampleMecanumDrive.getVelocityConstraint(velToCone, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL))
                 .addDisplacementMarker(1.5, () ->{
@@ -235,13 +235,14 @@ public class AutoRightSideAcc extends LinearOpMode {
                 addDisplacementMarker(1.5, () ->{
                     new Thread(() -> drive.intakeUP()).start();
                 })
-                .splineTo(new Vector2d(39, -12), Math.toRadians(180-1e-6))
-                .splineTo(poseForCone1, Math.toRadians(132),
+                .splineTo(new Vector2d(-39, -12), Math.toRadians(0))
+                .splineTo(poseForCone1, Math.toRadians(48),
                         SampleMecanumDrive.getVelocityConstraint(25, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(25))
                 .build();
         return trajToJunc;
     }
+
 
     private void putCone(){
         sleep(350);
