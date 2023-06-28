@@ -171,16 +171,16 @@ public class AutoRightSideAcc extends LinearOpMode {
         sleep(300);
         drive.followTrajectory(trajToJunc3);
         putCone();
-//        drive.followTrajectory(trajToCon4);
-//        drive.claw.setPosition(IntakeConstants.CLOSE_INTAKE);
-//        sleep(300);
-//        drive.followTrajectory(trajToJunc4);
-//        putCone();
+        drive.followTrajectory(trajToCon4);
+        drive.claw.setPosition(IntakeConstants.CLOSE_INTAKE);
+        sleep(300);
+        drive.followTrajectory(trajToJunc4);
+        putCone();
         new Thread(() ->
                 drive.changePosLift(0, 1, telemetry)).start();
         new Thread(() -> drive.intakeDOWN()).start();
         if(currTag == TagDetector.Tag.left){
-            Trajectory trajPark1 = drive.trajectoryBuilder(trajToJunc3.end(), true).
+            Trajectory trajPark1 = drive.trajectoryBuilder(traj1.end(), true).
                     splineTo(new Vector2d(29, -12), Math.toRadians(0))
                     .build();
             Trajectory trajPark2 = drive.trajectoryBuilder(trajPark1.end())
@@ -189,13 +189,15 @@ public class AutoRightSideAcc extends LinearOpMode {
             drive.followTrajectory(trajPark1);
             drive.followTrajectory(trajPark2);
         } else if(currTag == TagDetector.Tag.mid){
-            Trajectory trajPark1 = drive.trajectoryBuilder(trajToJunc3.end(), true).
-                    splineTo(new Vector2d(32, -12), Math.toRadians(0))
+            Trajectory trajPark1 = drive.trajectoryBuilder(traj1.end(), true).
+                    splineTo(new Vector2d(35, -12), Math.toRadians(0))
                     .build();
             drive.followTrajectory(trajPark1);
         } else {
-            Trajectory trajPark1 = drive.trajectoryBuilder(trajToJunc3.end(), true).
-                    splineTo(new Vector2d(58, -12), Math.toRadians(0))
+            Trajectory trajPark1 = drive.trajectoryBuilder(traj1.end(), true).
+                    splineTo(new Vector2d(60, -12.5), Math.toRadians(0),
+                            SampleMecanumDrive.getVelocityConstraint(15, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                            SampleMecanumDrive.getAccelerationConstraint(15))
                     .build();
             drive.followTrajectory(trajPark1);
         }
